@@ -1,0 +1,93 @@
+start: _statement+
+_statement:  commnet | _define_statement | _declare_statement
+                     | assignment_statement | block_statement
+                     | expression_satement
+STATEMENT_END: ";"
+commnet: /\#[^\n]*/
+
+block_statement: _block
+_block: LBRACE _statement* RBRACE
+
+type_name: /[A-Z][a-zA-Z0-9_]*/
+name: /[_a-z][a-zA-Z0-9_]*/
+
+expression_operator: PLUS | MINUS | LPREN | RPREN
+                   | LBRAK | RBRAK | LANGLE | RANGLE | COLON
+
+PLUS:  "+"
+MINUS: "-"
+
+BITOR: "|"
+BITAND: "&"
+AND: "&&"
+OR: "||"
+NOT: "!"
+
+number: OCT_NUMBER | HEX_NUMBER | BIN_NUMBER | DEC_NUMBER | FLOAT_NUMBER
+
+DEC_NUMBER: /-?[0-9]+/
+BIN_NUMBER: /0b[0-1]+/
+HEX_NUMBER: /0x[\da-f]+/
+OCT_NUMBER: /0\o[0-7]+/
+FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/
+
+string: STRING | LONG_STRING
+STRING : /[ubf]?r?("(?!"").*?(?<!\\)(\\\\)*?"|'(?!'').*?(?<!\\)(\\\\)*?')/
+LONG_STRING: /[ubf]?r?(""".*?(?<!\\)(\\\\)*?"""|'''.*?(?<!\\)(\\\\)*?''')/
+
+assignment_statement: name _assignment_operators _value STATEMENT_END
+_assignment_operators: ASSIGNMENT | ADDASSIGN | SUBASSIGN | MULASSIGN | DIVASSIGN
+                     | LSHIFTASSIGN | RSHIFTASSIGN | POWERASSIGN | ORASSIGN | ANDASSIGN
+
+ASSIGNMENT: ":="
+ADDASSIGN: "+="
+SUBASSIGN: "-="
+MULASSIGN: "*="
+DIVASSIGN: "/="
+LSHIFTASSIGN: "<<="
+RSHIFTASSIGN: ">>="
+POWERASSIGN: "^="
+ORASSIGN: "|="
+ANDASSIGN: "&="
+
+NOTEQ: "!="
+
+PIPE: "¦"
+COLON: ":"
+LPREN:  "("
+RPREN:  ")"
+LBRAK:  "["
+RBRAK:  "]"
+LBRACE: "{"
+RBRACE: "}"
+LANGLE: "<"
+RANGLE: ">"
+ESCAPE: "\\"
+
+expression_satement: _expression STATEMENT_END
+_expression: bin_expression | uniary_expression | call_expression
+call_expression: name LPREN RPREN // add paramaters
+bin_expression: _value expression_operator _value
+uniary_expression: expression_operator _value | _value expression_operator
+_value: literal_value | runtime_value
+literal_value: number | string
+runtime_value: _expression | name
+
+_define_statement: class_define | function_define | variable_define
+class_define: _DEFINE _STRUCT type_name (COLON type_name)? _block
+function_define: _DEFINE _FUNCTION type_name name LPREN RPREN _block
+variable_define: type_name name ASSIGNMENT _value STATEMENT_END
+
+_declare_statement: class_declaration | function_declaration | variable_declaration
+class_declaration: _DEFINE _STRUCT type_name STATEMENT_END
+function_declaration: _DEFINE _FUNCTION type_name name STATEMENT_END
+variable_declaration: type_name name STATEMENT_END
+
+keyword: _STRUCT | _DEFINE | _FUNCTION
+_STRUCT: "struct"
+_DEFINE: "def"
+_FUNCTION: "func"
+
+
+%import common.WS
+%ignore WS
