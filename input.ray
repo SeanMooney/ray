@@ -3,23 +3,33 @@ I32 my_hex_int := 0xff;
 I32 my_octal_int := 0o1;
 I32 my_bin_int := 0b11;
 F32 my_float := 0.0;
+
+String my_string := "this is a string" 
+                    ' as is this'
+                    """
+                    and this
+                    """
+                    ''' they will all 
+                    be appended'''
+                    ;
+
 def func Void freeFunction(){
-    # print("this is a test");
+    print("this is a test");
     I32 i := 1;
 }
 
 {
-    
+
 }
 
 def struct MyStruct : Parent {
     Bool my_class_var;
     def func Void memberFunction(){
-        # print("this is a test");
+        print(message:="this is a test");
         I32 i := 1;
         i := 1+1;
         i := -i;
-        #i += 1;
+        i += 1;
         myOtherFunc();
         1+2;
 
@@ -29,7 +39,9 @@ def struct MyStruct : Parent {
 
 }
 
-# define int main(I32: argc, string[] args){
-#     print("hello world");
-#     retrun 0;
-# }
+def func Void print(String: message){}
+
+ def func I32 main(I32: argc, String[]: args){
+     print("hello world");
+     return 0;
+ }

@@ -1,6 +1,6 @@
 start
   variable_define
-    type_name	I32
+    scalar_type_name	I32
     name	my_int
     :=
     literal_value
@@ -8,42 +8,63 @@ start
     ;
   commnet	# this is a comment
   variable_define
-    type_name	I32
+    scalar_type_name	I32
     name	my_hex_int
     :=
     literal_value
       number	0xff
     ;
   variable_define
-    type_name	I32
+    scalar_type_name	I32
     name	my_octal_int
     :=
     literal_value
       number	0o1
     ;
   variable_define
-    type_name	I32
+    scalar_type_name	I32
     name	my_bin_int
     :=
     literal_value
       number	0b11
     ;
   variable_define
-    type_name	F32
+    scalar_type_name	F32
     name	my_float
     :=
     literal_value
       number	0.0
     ;
+  variable_define
+    scalar_type_name	String
+    name	my_string
+    :=
+    literal_value
+      string	"this is a string"
+      string	' as is this'
+      string	"""
+                    and this
+                    """
+      string	''' they will all 
+                    be appended'''
+    ;
   function_define
-    type_name	Void
+    scalar_type_name	Void
     name	freeFunction
     (
     )
     {
-    commnet	# print("this is a test");
+    expression_satement
+      call_expression
+        name	print
+        (
+        arguments
+          literal_value
+            string	"this is a test"
+        )
+      ;
     variable_define
-      type_name	I32
+      scalar_type_name	I32
       name	i
       :=
       literal_value
@@ -54,23 +75,33 @@ start
     {
     }
   class_define
-    type_name	MyStruct
+    scalar_type_name	MyStruct
     :
-    type_name	Parent
+    scalar_type_name	Parent
     {
     variable_declaration
-      type_name	Bool
+      scalar_type_name	Bool
       name	my_class_var
       ;
     function_define
-      type_name	Void
+      scalar_type_name	Void
       name	memberFunction
       (
       )
       {
-      commnet	# print("this is a test");
+      expression_satement
+        call_expression
+          name	print
+          (
+          arguments
+            name	message
+            :=
+            literal_value
+              string	"this is a test"
+          )
+        ;
       variable_define
-        type_name	I32
+        scalar_type_name	I32
         name	i
         :=
         literal_value
@@ -79,24 +110,27 @@ start
       assignment_statement
         name	i
         :=
-        runtime_value
-          bin_expression
-            literal_value
-              number	1
-            expression_operator	+
-            literal_value
-              number	1
+        bin_expression
+          literal_value
+            number	1
+          expression_operator	+
+          literal_value
+            number	1
         ;
       assignment_statement
         name	i
         :=
-        runtime_value
-          uniary_expression
-            expression_operator	-
-            runtime_value
-              name	i
+        uniary_expression
+          expression_operator	-
+          runtime_value
+            name	i
         ;
-      commnet	#i += 1;
+      assignment_statement
+        name	i
+        +=
+        literal_value
+          number	1
+        ;
       expression_satement
         call_expression
           name	myOtherFunc
@@ -113,15 +147,53 @@ start
         ;
       }
     function_define
-      type_name	Void
+      scalar_type_name	Void
       name	myOtherFunc
       (
       )
       {
       }
     }
-  commnet	# define int main(I32: argc, string[] args){
-  commnet	#     print("hello world");
-  commnet	#     retrun 0;
-  commnet	# }
+  function_define
+    scalar_type_name	Void
+    name	print
+    (
+    paramaters
+      scalar_type_name	String
+      :
+      name	message
+    )
+    {
+    }
+  function_define
+    scalar_type_name	I32
+    name	main
+    (
+    paramaters
+      scalar_type_name	I32
+      :
+      name	argc
+      ,
+      aggregate_type_name
+        String
+        [
+        ]
+      :
+      name	args
+    )
+    {
+    expression_satement
+      call_expression
+        name	print
+        (
+        arguments
+          literal_value
+            string	"hello world"
+        )
+      ;
+    return_statement
+      literal_value
+        number	0
+      ;
+    }
 
