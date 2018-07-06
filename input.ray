@@ -1,17 +1,16 @@
-I32 my_int := 10;      # this is a comment
-I32 my_hex_int := 0xff;
-I32 my_octal_int := 0o1;
-I32 my_bin_int := 0b11;
-F32 my_float := 0.0;
-
 String my_string := "this is a string" 
                     ' as is this'
                     """
                     and this
                     """
-                    ''' they will all 
-                    be appended'''
-                    ;
+                    '''they will all 
+                    be appended''';
+
+I32 my_int := 10;      # this is a comment
+I32 my_hex_int := 0xff;
+I32 my_octal_int := 0o42;
+I32 my_bin_int := 0b11;
+F32 my_float := -0.0f;
 
 def func Void freeFunction(){
     print("this is a test");
@@ -19,6 +18,9 @@ def func Void freeFunction(){
 }
 
 {
+
+    I32 my_bin_int := 0b11;
+    {F32 my_float := -0.0f;}
 
 }
 
@@ -43,5 +45,7 @@ def func Void print(String: message){}
 
  def func I32 main(I32: argc, String[]: args){
      print("hello world");
-     return 0;
+     return 42;
  }
+
+ # this is a comment

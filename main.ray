@@ -1,0 +1,15 @@
+
+ # this is a comment from ray to cpp
+
+def func String genMessage(){
+    return "hello, world!\n";
+}
+
+String msg := genMessage();
+
+ def func I32 main(I32: argc, Char**: args){
+     print(msg);
+     print(genMessage());
+     #print("Hello, "+"World!\n");
+     return 42;
+ }

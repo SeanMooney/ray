@@ -1,19 +1,21 @@
 start: _statement+
-_statement:  commnet | _define_statement | _declare_statement
+_statement:  comment | _define_statement | _declare_statement
                      | assignment_statement | block_statement
-                     | expression_satement | return_statement
+                     | expression_statement | return_statement
 STATEMENT_END: ";"
-commnet: /\#[^\n]*/
+comment: /\#[^\n]*/
 
 block_statement: _block
+block: _block
 _block: LBRACE _statement* RBRACE
 
 return_statement: _RETURN _rval STATEMENT_END
 _RETURN: "return"
 
-_type_name: aggregate_type_name | scalar_type_name
+_type_name: aggregate_type_name | scalar_type_name | pointer_type_name
 scalar_type_name: /[A-Z][a-zA-Z0-9_]*/
 aggregate_type_name: /[A-Z][a-zA-Z0-9_]*/  LBRAK RBRAK
+pointer_type_name: /[A-Z][a-zA-Z0-9_]*[\*]+/
 name: /[_a-z][a-zA-Z0-9_]*/
 
 expression_operator: PLUS | MINUS | LPREN | RPREN
@@ -28,13 +30,15 @@ AND: "&&"
 OR: "||"
 NOT: "!"
 
-number: OCT_NUMBER | HEX_NUMBER | BIN_NUMBER | DEC_NUMBER | FLOAT_NUMBER
+number: OCT_NUMBER | HEX_NUMBER | BIN_NUMBER
+      | DEC_NUMBER | FLOAT_NUMBER | FIXED_POINT_NUMBER
 
 DEC_NUMBER: /-?[0-9]+/
 BIN_NUMBER: /0b[0-1]+/
 HEX_NUMBER: /0x[\da-f]+/
 OCT_NUMBER: /0\o[0-7]+/
-FLOAT_NUMBER: /((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/
+FIXED_POINT_NUMBER: /[-+]?((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/
+FLOAT_NUMBER: /[-+]?((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))[f]/
 
 string: STRING | LONG_STRING
 STRING : /[ubf]?r?("(?!"").*?(?<!\\)(\\\\)*?"|'(?!'').*?(?<!\\)(\\\\)*?')/
@@ -74,11 +78,11 @@ paramaters: _paramater (COMMA _paramater)*
 _paramater: _type_name COLON name (ASSIGNMENT _value)?
 
 arguments: _argument (COMMA _argument)*
-_argument: (name ASSIGNMENT)? _value
+_argument: (name ASSIGNMENT)? (_value|call_expression)
 
-expression_satement: _expression STATEMENT_END
+expression_statement: _expression STATEMENT_END
 _expression: bin_expression | uniary_expression | call_expression
-call_expression: name LPREN arguments? RPREN // add paramaters
+call_expression: name LPREN arguments? RPREN
 bin_expression: _rval expression_operator _rval
 uniary_expression: expression_operator _rval | _rval expression_operator
 _rval: _value | _expression
@@ -87,9 +91,9 @@ literal_value: number | string+
 runtime_value: name
 
 _define_statement: class_define | function_define | variable_define
-class_define: _DEFINE _STRUCT _type_name (COLON _type_name)? _block
-function_define: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN _block
-variable_define: _type_name name ASSIGNMENT _value STATEMENT_END
+class_define: _DEFINE _STRUCT _type_name (COLON _type_name)? block
+function_define: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN block
+variable_define: _type_name name ASSIGNMENT _rval STATEMENT_END
 
 _declare_statement: class_declaration | function_declaration | variable_declaration
 class_declaration: _DEFINE _STRUCT _type_name STATEMENT_END
