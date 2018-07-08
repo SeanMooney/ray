@@ -2,6 +2,7 @@ start: _statement+
 _statement:  comment | _define_statement | _declare_statement
                      | assignment_statement | block_statement
                      | expression_statement | return_statement
+                     | condtional_statement
 STATEMENT_END: ";"
 comment: /\#[^\n]*/
 
@@ -18,17 +19,31 @@ aggregate_type_name: /[A-Z][a-zA-Z0-9_]*/  LBRAK RBRAK
 pointer_type_name: /[A-Z][a-zA-Z0-9_]*[\*]+/
 name: /[_a-z][a-zA-Z0-9_]*/
 
-expression_operator: PLUS | MINUS | LPREN | RPREN
-                   | LBRAK | RBRAK | LANGLE | RANGLE | COLON
+_expression_operator: _comparision_ops | _logic_ops | _math_ops
 
+_math_ops: PLUS | MINUS | MULTI | DIV | MOD
 PLUS:  "+"
 MINUS: "-"
+MULTI: "*"
+DIV: "/"
+MOD: "%"
 
+_logic_ops: BITOR | BITAND | AND | OR | NOT
 BITOR: "|"
 BITAND: "&"
 AND: "&&"
 OR: "||"
 NOT: "!"
+
+_comparision_ops: NOTEQ | EQ | GTEQ | LTEQ 
+                  | GT | LT | CMP
+EQ: "=="
+NOTEQ: "!="
+GT: ">"
+GTEQ: ">="
+LT: "<"
+LTEQ: "<="
+CMP: "<=>"
 
 number: OCT_NUMBER | HEX_NUMBER | BIN_NUMBER
       | DEC_NUMBER | FLOAT_NUMBER | FIXED_POINT_NUMBER
@@ -59,7 +74,6 @@ POWERASSIGN: "^="
 ORASSIGN: "|="
 ANDASSIGN: "&="
 
-NOTEQ: "!="
 
 PIPE: "¦"
 COMMA: ","
@@ -78,33 +92,46 @@ paramaters: _paramater (COMMA _paramater)*
 _paramater: _type_name COLON name (ASSIGNMENT _value)?
 
 arguments: _argument (COMMA _argument)*
-_argument: (name ASSIGNMENT)? (_value|call_expression)
+_argument: (name ASSIGNMENT)? (_rval)
 
 expression_statement: _expression STATEMENT_END
-_expression: bin_expression | uniary_expression | call_expression
+_expression: bin_expression | uniary_expression | call_expression | construct_expression
+
 call_expression: name LPREN arguments? RPREN
-bin_expression: _rval expression_operator _rval
-uniary_expression: expression_operator _rval | _rval expression_operator
+construct_expression: scalar_type_name LPREN arguments? RPREN | LBRACE arguments+  RBRACE
+bin_expression: _rval _expression_operator _rval
+uniary_expression: _expression_operator _rval | _rval _expression_operator
+
 _rval: _value | _expression
 _value: literal_value | runtime_value
 literal_value: number | string+
 runtime_value: name
 
-_define_statement: class_define | function_define | variable_define
+condtional_statement: if_statement
+                    | if_statement elif_statement
+                    | if_statement else_statement
+                    | if_statement elif_statement+ else_statement
+
+if_statement: "if" LPREN _rval RPREN block
+elif_statement: "elif" LPREN _rval RPREN block
+else_statement: "else" block
+
+_define_statement: class_define | function_define | variable_define | operator_define
 class_define: _DEFINE _STRUCT _type_name (COLON _type_name)? block
 function_define: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN block
 variable_define: _type_name name ASSIGNMENT _rval STATEMENT_END
+operator_define: _DEFINE _OPERATOR (scalar_type_name|name) LPREN paramaters? RPREN block
 
 _declare_statement: class_declaration | function_declaration | variable_declaration
 class_declaration: _DEFINE _STRUCT _type_name STATEMENT_END
 function_declaration: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN STATEMENT_END
 variable_declaration: _type_name name STATEMENT_END
 
-keyword: _STRUCT | _DEFINE | _FUNCTION
+keyword: _STRUCT | _DEFINE | _FUNCTION | _OPERATOR
 _STRUCT: "struct"
 _DEFINE: "def"
 _FUNCTION: "func"
-
+_OPERATOR: "op"
 
 %import common.WS
 %ignore WS

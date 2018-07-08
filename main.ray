@@ -1,15 +1,40 @@
-
  # this is a comment from ray to cpp
 
 def func String genMessage(){
     return "hello, world!\n";
 }
 
+def func I32 add(I32: lhs, I32: rhs){
+    return lhs + rhs;
+}
+
 String msg := genMessage();
 
- def func I32 main(I32: argc, Char**: args){
-     print(msg);
-     print(genMessage());
-     #print("Hello, "+"World!\n");
-     return 42;
- }
+def struct Bool{}
+def struct True{
+    def op bool(){return true;}
+    def op String(){return "True";}
+}
+def struct False{
+    def op bool(){return false;}
+    def op String(){return "False";}
+}
+
+def func I32 main(I32: argc, Char**: args){
+    # print(msg);
+    # print(genMessage());
+    # String val := {I32(42.0f)};
+    # print(val);
+    # print({I32(42.0f)});
+    printf("val: %d\n", 42 );
+    if(1==1){
+        println("this is a test");
+    } elif (1==2){
+        println("you have bigger problems if you get here");
+    }
+    else{
+        println("this should also not print.");
+    }
+
+    return 0;
+}

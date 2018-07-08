@@ -17,18 +17,29 @@ class RayToCpp(object):
             "block_statement": self.processBlock,
             "function_define": self.processFunction,
             "return_statement": self.processReturn,
-            "expression_statement": self.processExpressionStatement
+            "expression_statement": self.processExpressionStatement,
+            "class_define": self.processClass,
+            "condtional_statement": self.processCondtional
         }
 
         self.nodeDecoders = {
             "literal_value": self.decodeLiteral,
             "runtime_value": self.decodeRuntimeVal,
             "variable_define": self.decodeVarDef,
-            "block_statement": self.decodeBlock,
+            "class_define": self.decodeClassDef,
             "function_define": self.decodeFunctionDef,
+            "operator_define": self.decodeOperator,
+            "construct_expression": self.decodeConstruct,
+            "call_expression": self.decodeCall,
+            "bin_expression": self.decodeBinExpression,
+            "block_statement": self.decodeBlock,
+            "block": self.decodeBlock,
             "return_statement": self.decodeReturn,
             "expression_statement": self.decodeExpression,
-            "call_expression": self.decodeCall,
+            "if_statement": self.decodeIf,
+            "elif_statement": self.decodeElif,
+            "else_statement": self.decodeElse,
+            "condtional_statement": self.decodeCondtional,
             "name": self.decodeName,
             "scalar_type_name": self.decodeScalarTypeName,
             "aggregate_type_name": self.decodeAggregateTypeName,
@@ -37,7 +48,6 @@ class RayToCpp(object):
             "number": self.decodeNumber,
             "token": self.decodeToken,
             "string": self.decodeString,
-            "block_statement": self.decodeBlock,
             "DEC_NUMBER": self.decodeDecNumber,
             "OCT_NUMBER": self.decodeOctNumber,
             "BIN_NUMBER": self.decodeBinNumber,
@@ -66,6 +76,40 @@ class RayToCpp(object):
             data += "\n"
         yield "".join(data)
 
+    def processCondtional(self, node, out=sys.stdout):
+        print(self.consume(self.decodeCondtional(node)), file=out)
+
+
+    def decodeCondtional(self, node, out=sys.stdout):
+        raw = node.children
+        data = []
+        for sub_node in raw:
+            current = self.getDecoder(sub_node)(sub_node)
+            data += self.consume(current)
+            data += "\n"
+        yield "".join(data)
+
+    def decodeIf(self, node):
+        raw = node.children
+        cpp = "if(%(condition)s)%(body)s"
+        condition = self.consume(self.getDecoder(raw[1])(raw[1]))
+        body = self.consume(self.getDecoder(raw[3])(raw[3]))
+        yield cpp % {"condition": condition, "body": body}
+
+
+    def decodeElif(self, node):
+        raw = node.children
+        cpp = "else if(%(condition)s)%(body)s"
+        condition = self.consume(self.getDecoder(raw[1])(raw[1]))
+        body = self.consume(self.getDecoder(raw[3])(raw[3]))
+        yield cpp % {"condition": condition, "body": body}
+
+    def decodeElse(self, node):
+        raw = node.children
+        cpp = "else %(body)s"
+        body = self.consume(self.getDecoder(raw[0])(raw[0]))
+        yield cpp % {"body": body}
+
     def processComment(self, node, out=sys.stdout):
         print(self.consume(self.decodeComment(node)), file=out)
 
@@ -91,12 +135,55 @@ class RayToCpp(object):
         cpp = "\n%(type)s %(name)s( %(args)s )%(block)s"
         yield cpp % params
 
+    def decodeOperator(self, node):
+        # return "function def"
+        child_nodes = node.children
+        params = {
+            "type": self.consume(self.getDecoder(child_nodes[0])(child_nodes[0])),
+            "args": "",
+            "block": self.consume(self.decodeBlock(child_nodes[-1])),
+        }
+        if len(child_nodes) == 5:
+            params["args"] = self.consume(self.decodeParams(child_nodes[3]))
+
+        cpp = "\n operator %(type)s( %(args)s )%(block)s"
+        yield cpp % params
+
+    def processClass(self, node, out=sys.stdout):
+        print(self.consume(self.getDecoder(node)(node)), file=out)
+
+    def decodeClassDef(self, node):
+        child_nodes = node.children
+        params = {
+            "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
+            "block": self.consume(self.decodeBlock(child_nodes[-1])),
+            "parent": ""
+        }
+        if len(child_nodes) == 4:
+            params["parent"] = ': public ' + self.consume(self.decodeParams(child_nodes[2]))
+
+        cpp = "\n struct %(type)s %(parent)s %(block)s;"
+        yield (cpp % params).replace('\n;',';')
+
+    def decodeBinExpression(self, node):
+        lhs = node.children[0]
+        operator = node.children[1]
+        rhs = node.children[2]
+        params = {
+            "lhs": self.consume(self.getDecoder(lhs)(lhs)),
+            "operator": self.consume(self.getDecoder(operator)(operator)),
+            "rhs": self.consume(self.getDecoder(rhs)(rhs))
+        }
+        cpp = "%(lhs)s %(operator)s %(rhs)s"
+        yield (cpp % params)
+
+
     def decodeArgs(self, node):
         child_nodes = node.children
         data = []
         for sub_node in child_nodes:
             tmp = self.consume(self.getDecoder(sub_node)(sub_node))
-            if sub_node.data == "string":
+            if not isinstance(sub_node, Token) and sub_node.data == "string":
                 tmp = "'%s'" % tmp
             data += '%s ' % tmp
         args = "".join(data)
@@ -141,6 +228,26 @@ class RayToCpp(object):
             params["args"] = args
         cpp = "%(name)s(%(args)s)"
         yield cpp % params
+
+
+    def decodeConstruct(self, node):
+        child_nodes = node.children
+        params = {}
+        cpp = ""
+        if not isinstance(child_nodes[0],Token):
+            params = {
+                "name": self.consume(self.decodeName(child_nodes[0])),
+                "args": ""
+            }
+            if len(child_nodes) > 3:
+                args = self.consume(self.decodeArgs(child_nodes[2]))
+                params["args"] = args
+            cpp = "%(name)s(%(args)s)"
+        else:
+            params = self.consume(self.decodeArgs(child_nodes[1]))
+            cpp = "{%s}"
+        yield cpp % params
+
 
     def consume(self, val):
         ret = val
@@ -260,15 +367,21 @@ class RayToCpp(object):
 def main():
     parser = None
     with open("ray.ebnf") as grammer:
-        parser = Lark(grammer.read(), parser='lalr', propagate_positions=True)
-        #  parser = Lark(grammer.read())
+
+
+        # parser = Lark(grammer.read(), parser='lalr',
+        #               propagate_positions=True, lexer='contextual')
+        # parser = Lark(grammer.read(), propagate_positions=True)
+
+        parser = Lark(grammer.read(), parser='lalr',
+              propagate_positions=True, lexer='standard')
 
     tree = None
     with open("main.ray") as input:
+    # with open("input.ray") as input:
         tree = parser.parse(input.read())
-        # print(tree)
 
-    header = """
+    header = '''
 #include <iostream>
 
 using I32=int;
@@ -279,7 +392,10 @@ using String=std::string;
 void print(String msg){
     std::cout << msg;
 }
-"""
+void println(String msg){
+    std::cout << msg << '\\n';
+}
+'''
     transPiler = RayToCpp()
     with open("output.cpp", "w") as out:
         print(header, file=out)
