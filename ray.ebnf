@@ -35,7 +35,7 @@ AND: "&&"
 OR: "||"
 NOT: "!"
 
-_comparision_ops: NOTEQ | EQ | GTEQ | LTEQ 
+_comparision_ops: NOTEQ | EQ | GTEQ | LTEQ
                   | GT | LT | CMP
 EQ: "=="
 NOTEQ: "!="
@@ -92,7 +92,7 @@ paramaters: _paramater (COMMA _paramater)*
 _paramater: _type_name COLON name (ASSIGNMENT _value)?
 
 arguments: _argument (COMMA _argument)*
-_argument: (name ASSIGNMENT)? (_rval)
+_argument: (name ASSIGNMENT)? _rval
 
 expression_statement: _expression STATEMENT_END
 _expression: bin_expression | uniary_expression | call_expression | construct_expression
@@ -102,7 +102,7 @@ construct_expression: scalar_type_name LPREN arguments? RPREN | LBRACE arguments
 bin_expression: _rval _expression_operator _rval
 uniary_expression: _expression_operator _rval | _rval _expression_operator
 
-_rval: _value | _expression
+_rval: _expression | _value
 _value: literal_value | runtime_value
 literal_value: number | string+
 runtime_value: name

@@ -13,18 +13,6 @@ void println(String msg){
     std::cout << msg << '\n';
 }
 
-// this is a comment from ray to cpp
-
-String genMessage(  ){
-return "hello, world!\n";
-}
-
-
-I32 add( I32  lhs, I32  rhs  ){
-return lhs + rhs;
-}
-
-String msg = genMessage() ;
 
  struct Bool  {
 };
@@ -55,26 +43,25 @@ return "False";
 
 };
 
-I32 main( I32  argc, Char**  args  ){
-// print(msg);
-// print(genMessage());
-// String val := {I32(42.0f)};
-// print(val);
-// print({I32(42.0f)});
-printf("val: %d\n", 42 );
-if(1 == 1){
-println("this is a test" );
+I32 fib( I32  i  ){
+if(i == 1){
+return 1;
 }
 
-else if(1 == 2){
-println("you have bigger problems if you get here" );
+else if(i == 2){
+return 1;
 }
 
 else {
-println("this should also not print." );
+return fib(i - 2 ) + fib(i - 1 );
 }
 
 
+}
+
+
+I32 main( I32  argc, Char**  args  ){
+printf("%d", fib(42 ) );
 return 0;
 }
 

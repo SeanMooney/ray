@@ -371,10 +371,10 @@ def main():
 
         # parser = Lark(grammer.read(), parser='lalr',
         #               propagate_positions=True, lexer='contextual')
-        # parser = Lark(grammer.read(), propagate_positions=True)
+        # parser = Lark(grammer.read(), parser='lalr',
+        #       propagate_positions=True, lexer='standard')
+        parser = Lark(grammer.read(), propagate_positions=True)
 
-        parser = Lark(grammer.read(), parser='lalr',
-              propagate_positions=True, lexer='standard')
 
     tree = None
     with open("main.ray") as input:
