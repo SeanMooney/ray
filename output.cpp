@@ -9,9 +9,12 @@ using String=std::string;
 void print(String msg){
     std::cout << msg;
 }
+
 void println(String msg){
-    std::cout << msg << '\n';
+    std::cout << msg << '\\n';
 }
+
+
 
 
  struct Bool  {

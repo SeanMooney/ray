@@ -1,4 +1,26 @@
- 
+@compiler<cpp><[{
+#include <iostream>
+
+using I32=int;
+using Char=char;
+using Void=void;
+using String=std::string;
+
+void print(String msg){
+    std::cout << msg;
+}
+
+void println(String msg){
+    std::cout << msg << '\\n';
+}
+}]>
+
+@compiler<python3><[{
+# this should be omited from the compiled form the output
+# as the only valid target lanugage is cpp
+}]>
+
+
 def struct Bool{}
 def struct True{
     def op bool(){return true;}

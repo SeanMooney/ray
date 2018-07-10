@@ -11,6 +11,7 @@ from lark.lexer import Token
 class RayToCpp(object):
 
     def __init__(self, *args, **kwargs):
+        self.targetLang = "cpp"
         self.nodeTransformers = {
             "variable_define": self.processVarDef,
             "comment": self.processComment,
@@ -19,7 +20,8 @@ class RayToCpp(object):
             "return_statement": self.processReturn,
             "expression_statement": self.processExpressionStatement,
             "class_define": self.processClass,
-            "condtional_statement": self.processCondtional
+            "condtional_statement": self.processCondtional,
+            "compiler_statement": self.processCompilerStatement
         }
 
         self.nodeDecoders = {
@@ -32,8 +34,10 @@ class RayToCpp(object):
             "construct_expression": self.decodeConstruct,
             "call_expression": self.decodeCall,
             "bin_expression": self.decodeBinExpression,
+            "compiler_statement": self.decodeCompilerStatement,
             "block_statement": self.decodeBlock,
             "block": self.decodeBlock,
+            "escaped_block": self.decodeEscapedBlock,
             "return_statement": self.decodeReturn,
             "expression_statement": self.decodeExpression,
             "if_statement": self.decodeIf,
@@ -63,6 +67,26 @@ class RayToCpp(object):
     def processNode(self, node, out=sys.stdout):
         func = self.nodeTransformers.get(node.data, self.defaultNode)
         func(node, out=out)
+
+
+    def processCompilerStatement(self, node, out=sys.stdout):
+        print(self.consume(self.decodeCompilerStatement(node)), file=out)
+
+    def decodeCompilerStatement(self, node):
+        raw = node.children
+        if raw[1].children[0].value == self.targetLang:
+            sub_node = raw[3]
+            current = self.getDecoder(sub_node)(sub_node)
+            data = []
+            data += self.consume(current)
+            data += "\n"
+            yield "".join(data)
+        else:
+            yield ""
+
+    def decodeEscapedBlock(self,node):
+        yield node.children[0].value[3:-3]
+
 
     def processBlock(self, node, out=sys.stdout):
         print(self.consume(self.decodeBlock(node)), file=out)
@@ -381,24 +405,8 @@ def main():
     # with open("input.ray") as input:
         tree = parser.parse(input.read())
 
-    header = '''
-#include <iostream>
-
-using I32=int;
-using Char=char;
-using Void=void;
-using String=std::string;
-
-void print(String msg){
-    std::cout << msg;
-}
-void println(String msg){
-    std::cout << msg << '\\n';
-}
-'''
     transPiler = RayToCpp()
     with open("output.cpp", "w") as out:
-        print(header, file=out)
         transPiler.processTree(tree, out)
 
 

@@ -2,7 +2,7 @@ start: _statement+
 _statement:  comment | _define_statement | _declare_statement
                      | assignment_statement | block_statement
                      | expression_statement | return_statement
-                     | condtional_statement
+                     | condtional_statement | compiler_statement
 STATEMENT_END: ";"
 comment: /\#[^\n]*/
 
@@ -115,6 +115,11 @@ condtional_statement: if_statement
 if_statement: "if" LPREN _rval RPREN block
 elif_statement: "elif" LPREN _rval RPREN block
 else_statement: "else" block
+
+compiler_statement: "@compiler" LANGLE name RANGLE escaped_block
+escaped_block: /((<\[\{)([\s\S]*?)(\}\]>))/
+_OPEN_ESCAPE_BLOCK: "<[{"
+_CLOSE_ESCAPE_BLOCK: "}]>"
 
 _define_statement: class_define | function_define | variable_define | operator_define
 class_define: _DEFINE _STRUCT _type_name (COLON _type_name)? block
