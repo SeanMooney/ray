@@ -5,13 +5,15 @@ using I32=int;
 using Char=char;
 using Void=void;
 using String=std::string;
+#define TRUE__ true
+#define FALSE__ false
 
 void print(String msg){
     std::cout << msg;
 }
 
 void println(String msg){
-    std::cout << msg << '\\n';
+    std::cout << msg << '\n';
 }
 }]>
 
@@ -23,11 +25,11 @@ void println(String msg){
 
 def struct Bool{}
 def struct True{
-    def op bool(){return true;}
+    def op bool(){return TRUE__;}
     def op String(){return "True";}
 }
 def struct False{
-    def op bool(){return false;}
+    def op bool(){return FALSE__;}
     def op String(){return "False";}
 }
 

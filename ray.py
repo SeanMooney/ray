@@ -45,6 +45,7 @@ class RayToCpp(object):
             "else_statement": self.decodeElse,
             "condtional_statement": self.decodeCondtional,
             "name": self.decodeName,
+            "constant_name": self.decodeConstant,
             "scalar_type_name": self.decodeScalarTypeName,
             "aggregate_type_name": self.decodeAggregateTypeName,
             "pointer_type_name": self.decodePointerTypeName,
@@ -296,6 +297,9 @@ class RayToCpp(object):
 
     def decodeRaw(self, node):
         yield str(node)
+
+    def decodeConstant(self, node):
+        yield node.children[0].value
 
     def decodeToken(self, node):
         yield node.value

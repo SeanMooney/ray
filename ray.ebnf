@@ -13,10 +13,11 @@ _block: LBRACE _statement* RBRACE
 return_statement: _RETURN _rval STATEMENT_END
 _RETURN: "return"
 
-_type_name: aggregate_type_name | scalar_type_name | pointer_type_name
+_type_name:  aggregate_type_name | scalar_type_name | pointer_type_name
 scalar_type_name: /[A-Z][a-zA-Z0-9_]*/
 aggregate_type_name: /[A-Z][a-zA-Z0-9_]*/  LBRAK RBRAK
 pointer_type_name: /[A-Z][a-zA-Z0-9_]*[\*]+/
+constant_name: /[A-Z_]+/
 name: /[_a-z][a-zA-Z0-9_]*/
 
 _expression_operator: _comparision_ops | _logic_ops | _math_ops
@@ -104,7 +105,7 @@ uniary_expression: _expression_operator _rval | _rval _expression_operator
 
 _rval: _expression | _value
 _value: literal_value | runtime_value
-literal_value: number | string+
+literal_value: number | string+ | constant_name
 runtime_value: name
 
 condtional_statement: if_statement
