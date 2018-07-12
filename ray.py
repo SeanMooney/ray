@@ -14,6 +14,7 @@ class RayToCpp(object):
         self.targetLang = "cpp"
         self.nodeTransformers = {
             "variable_define": self.processVarDef,
+            "variable_declaration": self.processVarDeclare,
             "comment": self.processComment,
             "block_statement": self.processBlock,
             "function_define": self.processFunction,
@@ -21,13 +22,19 @@ class RayToCpp(object):
             "expression_statement": self.processExpressionStatement,
             "class_define": self.processClass,
             "condtional_statement": self.processCondtional,
-            "compiler_statement": self.processCompilerStatement
+            "compiler_statement": self.processCompilerStatement,
+            "while_statement": self.processWhile,
+            "assignment_statement": self.processAssignment
         }
 
         self.nodeDecoders = {
             "literal_value": self.decodeLiteral,
             "runtime_value": self.decodeRuntimeVal,
+            "variable_declaration": self.decodeVarDeclare,
             "variable_define": self.decodeVarDef,
+            "scalar_define": self.decodeScalarDef,
+            "aggregate_define": self.decodeAggregateDef,
+            "aggregate_declaration": self.decodeAggregateDeclare,
             "class_define": self.decodeClassDef,
             "function_define": self.decodeFunctionDef,
             "operator_define": self.decodeOperator,
@@ -35,11 +42,13 @@ class RayToCpp(object):
             "call_expression": self.decodeCall,
             "bin_expression": self.decodeBinExpression,
             "compiler_statement": self.decodeCompilerStatement,
+            "assignment_statement": self.decodeAssignment,
             "block_statement": self.decodeBlock,
             "block": self.decodeBlock,
             "escaped_block": self.decodeEscapedBlock,
             "return_statement": self.decodeReturn,
             "expression_statement": self.decodeExpression,
+            "while_statement": self.decodeWhile,
             "if_statement": self.decodeIf,
             "elif_statement": self.decodeElif,
             "else_statement": self.decodeElse,
@@ -81,7 +90,7 @@ class RayToCpp(object):
             data = []
             data += self.consume(current)
             data += "\n"
-            yield "".join(data)
+            yield "".join(data[:-1])
         else:
             yield ""
 
@@ -99,7 +108,7 @@ class RayToCpp(object):
             current = self.getDecoder(sub_node)(sub_node)
             data += self.consume(current)
             data += "\n"
-        yield "".join(data)
+        yield "".join(data[:-1])
 
     def processCondtional(self, node, out=sys.stdout):
         print(self.consume(self.decodeCondtional(node)), file=out)
@@ -112,7 +121,7 @@ class RayToCpp(object):
             current = self.getDecoder(sub_node)(sub_node)
             data += self.consume(current)
             data += "\n"
-        yield "".join(data)
+        yield "".join(data[:-1])
 
     def decodeIf(self, node):
         raw = node.children
@@ -149,7 +158,7 @@ class RayToCpp(object):
         # return "function def"
         child_nodes = node.children
         params = {
-            "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
+            "type": self.consume(self.getDecoder(child_nodes[0])(child_nodes[0])),
             "name": self.consume(self.decodeName(child_nodes[1])),
             "args": "",
             "block": self.consume(self.decodeBlock(child_nodes[-1])),
@@ -157,7 +166,7 @@ class RayToCpp(object):
         if len(child_nodes) == 6:
             params["args"] = self.consume(self.decodeParams(child_nodes[3]))
 
-        cpp = "\n%(type)s %(name)s( %(args)s )%(block)s"
+        cpp = "%(type)s %(name)s( %(args)s )%(block)s"
         yield cpp % params
 
     def decodeOperator(self, node):
@@ -171,7 +180,7 @@ class RayToCpp(object):
         if len(child_nodes) == 5:
             params["args"] = self.consume(self.decodeParams(child_nodes[3]))
 
-        cpp = "\n operator %(type)s( %(args)s )%(block)s"
+        cpp = "operator %(type)s( %(args)s )%(block)s"
         yield cpp % params
 
     def processClass(self, node, out=sys.stdout):
@@ -187,7 +196,7 @@ class RayToCpp(object):
         if len(child_nodes) == 4:
             params["parent"] = ': public ' + self.consume(self.decodeParams(child_nodes[2]))
 
-        cpp = "\n struct %(type)s %(parent)s %(block)s;"
+        cpp = "struct %(type)s %(parent)s %(block)s;"
         yield (cpp % params).replace('\n;',';')
 
     def decodeBinExpression(self, node):
@@ -281,11 +290,75 @@ class RayToCpp(object):
             ret = next(ret)
         return ret
 
+    def processWhile(self, node, out=sys.stdout):
+        result = self.consume(self.decodeWhile(node))
+        print(result, file=out)
+
+    def decodeWhile(self, node):
+        child_nodes = node.children
+        params = {
+            "condition": self.consume(self.getDecoder(child_nodes[1])(child_nodes[1])),
+            "block": self.consume(self.getDecoder(child_nodes[3])(child_nodes[3])),
+        }
+        cpp = "while(%(condition)s)%(block)s;"
+        yield cpp % params
+
+    def processAssignment(self, node, out=sys.stdout):
+        result = self.consume(self.decodeAssignment(node))
+        print(result, file=out)
+
+    def decodeAssignment(self, node):
+        child_nodes = node.children
+
+        params = {
+            "name":  self.consume(self.getDecoder(child_nodes[0])(child_nodes[0])),
+            "offset":"[" +  self.consume(self.getDecoder(child_nodes[2])(child_nodes[2])) + "]",
+            "rval": self.consume(self.getDecoder(child_nodes[5])(child_nodes[5])),
+        } if len(child_nodes) == 7 else {
+            "name":  self.consume(self.getDecoder(child_nodes[0])(child_nodes[0])),
+            "offset": "",
+            "rval": self.consume(self.getDecoder(child_nodes[2])(child_nodes[2])),
+        }
+        cpp = "%(name)s%(offset)s = %(rval)s;"
+        yield cpp % params
+
+    def processVarDeclare(self, node, out=sys.stdout):
+        result = self.consume(self.decodeVarDeclare(node))
+        print(result, file=out)
+
+    def decodeVarDeclare(self, node):
+        raw = node.children[0]
+        yield self.getDecoder(raw)(raw)
+
+    def decodeAggregateDeclare(self, node):
+        child_nodes = node.children
+        params = {
+            "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
+            "size": self.consume(self.decodeRVal(child_nodes[2])),
+            "name": self.consume(self.decodeName(child_nodes[4])),
+        }
+        cpp = "std::vector<%(type)s> %(name)s(%(size)s);"
+        yield cpp % params
+
     def processVarDef(self, node, out=sys.stdout):
         result = self.consume(self.decodeVarDef(node))
         print(result, file=out)
 
-    def decodeVarDef(self, node):
+    def decodeVarDef(self,node):
+        raw = node.children[0]
+        yield self.getDecoder(raw)(raw)
+
+    def decodeAggregateDef(self, node):
+        child_nodes = node.children
+        params = {
+            "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
+            "name": self.consume(self.decodeName(child_nodes[1])),
+            "val": self.consume(self.decodeRVal(child_nodes[3])),
+        }
+        cpp = "std::array<%(type)s,%(size)s> %(name)s = %(val)s ;"
+        yield cpp % params
+
+    def decodeScalarDef(self, node):
         child_nodes = node.children
         params = {
             "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
@@ -375,11 +448,9 @@ class RayToCpp(object):
         yield self.decodeToken(node.children[0])
 
     def decodeAggregateTypeName(self, node):
-        child_nodes = node.children
-        data = []
-        for sub_node in child_nodes:
-            data += self.getDecoder(sub_node)(sub_node)
-        yield "".join(data)
+        raw = node.children[0]
+        typename = self.consume(self.getDecoder(raw)(raw))
+        yield "std::vector<%s>" % typename
 
     def decodePointerTypeName(self, node):
         child_nodes = node.children

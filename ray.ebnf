@@ -3,6 +3,7 @@ _statement:  comment | _define_statement | _declare_statement
                      | assignment_statement | block_statement
                      | expression_statement | return_statement
                      | condtional_statement | compiler_statement
+                     | _iteration_statement
 STATEMENT_END: ";"
 comment: /\#[^\n]*/
 
@@ -20,7 +21,9 @@ pointer_type_name: /[A-Z][a-zA-Z0-9_]*[\*]+/
 constant_name: /[A-Z_]+/
 name: /[_a-z][a-zA-Z0-9_]*/
 
-_expression_operator: _comparision_ops | _logic_ops | _math_ops
+_expression_operator: _comparision_ops | _logic_ops | _math_ops | subscript
+
+subscript: name  LBRAK _rval RBRAK
 
 _math_ops: PLUS | MINUS | MULTI | DIV | MOD
 PLUS:  "+"
@@ -60,7 +63,7 @@ string: STRING | LONG_STRING
 STRING : /[ubf]?r?("(?!"").*?(?<!\\)(\\\\)*?"|'(?!'').*?(?<!\\)(\\\\)*?')/
 LONG_STRING: /[ubf]?r?(""".*?(?<!\\)(\\\\)*?"""|'''.*?(?<!\\)(\\\\)*?''')/s
 
-assignment_statement: name _assignment_operators _rval STATEMENT_END
+assignment_statement: (name | name LBRAK _rval? RBRAK ) _assignment_operators _rval STATEMENT_END
 _assignment_operators: ASSIGNMENT | ADDASSIGN | SUBASSIGN | MULASSIGN | DIVASSIGN
                      | LSHIFTASSIGN | RSHIFTASSIGN | POWERASSIGN | ORASSIGN | ANDASSIGN
 
@@ -117,6 +120,10 @@ if_statement: "if" LPREN _rval RPREN block
 elif_statement: "elif" LPREN _rval RPREN block
 else_statement: "else" block
 
+_iteration_statement: while_statement | for_statement
+while_statement: "while" LPREN _rval RPREN block
+for_statement: "for" LPREN _type_name name "in" _rval RPREN block
+
 compiler_statement: "@compiler" LANGLE name RANGLE escaped_block
 escaped_block: /((<\[\{)([\s\S]*?)(\}\]>))/
 _OPEN_ESCAPE_BLOCK: "<[{"
@@ -125,13 +132,17 @@ _CLOSE_ESCAPE_BLOCK: "}]>"
 _define_statement: class_define | function_define | variable_define | operator_define
 class_define: _DEFINE _STRUCT _type_name (COLON _type_name)? block
 function_define: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN block
-variable_define: _type_name name ASSIGNMENT _rval STATEMENT_END
+variable_define: scalar_define | aggregate_define
+scalar_define: (scalar_type_name|pointer_type_name) name ASSIGNMENT _rval STATEMENT_END
+aggregate_define: scalar_type_name LBRAK _rval RBRAK name ASSIGNMENT _rval STATEMENT_END
 operator_define: _DEFINE _OPERATOR (scalar_type_name|name) LPREN paramaters? RPREN block
 
 _declare_statement: class_declaration | function_declaration | variable_declaration
 class_declaration: _DEFINE _STRUCT _type_name STATEMENT_END
 function_declaration: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN STATEMENT_END
-variable_declaration: _type_name name STATEMENT_END
+variable_declaration: scalar_declaration | aggregate_declaration
+scalar_declaration: (scalar_type_name|pointer_type_name) name STATEMENT_END
+aggregate_declaration: scalar_type_name LBRAK _rval RBRAK name STATEMENT_END
 
 keyword: _STRUCT | _DEFINE | _FUNCTION | _OPERATOR
 _STRUCT: "struct"
