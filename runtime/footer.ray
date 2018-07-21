@@ -1,0 +1,5 @@
+@compiler<cpp><[{
+
+int main(Int32 argc, Char** args){ return __main__(argc,args);}
+
+}]>

@@ -3,7 +3,8 @@ _statement:  comment | _define_statement | _declare_statement
                      | assignment_statement | block_statement
                      | expression_statement | return_statement
                      | condtional_statement | compiler_statement
-                     | _iteration_statement
+                     | _iteration_statement | module_statement
+                     | import_statement | from_statement
 STATEMENT_END: ";"
 comment: /\#[^\n]*/
 
@@ -14,16 +15,17 @@ _block: LBRACE _statement* RBRACE
 return_statement: _RETURN _rval STATEMENT_END
 _RETURN: "return"
 
-_type_name:  aggregate_type_name | scalar_type_name | pointer_type_name
-scalar_type_name: /[A-Z][a-zA-Z0-9_]*/
+_type_name:  aggregate_type_name | scalar_type_name | pointer_type_name | ref_type_name
+scalar_type_name: /[A-Z][a-zA-Z0-9_]*/ | AUTO
+ref_type_name: /[A-Z][a-zA-Z0-9_]*[\&]/ | AUTO "&"
 aggregate_type_name: /[A-Z][a-zA-Z0-9_]*/  LBRAK RBRAK
-pointer_type_name: /[A-Z][a-zA-Z0-9_]*[\*]+/
+pointer_type_name: /[A-Z][a-zA-Z0-9_]*[\*]+/ | AUTO "*"
 constant_name: /[A-Z_]+/
 name: /[_a-z][a-zA-Z0-9_]*/
 
 _expression_operator: _comparision_ops | _logic_ops | _math_ops | subscript
 
-subscript: name  LBRAK _rval RBRAK
+subscript: LBRAK _rval RBRAK
 
 _math_ops: PLUS | MINUS | MULTI | DIV | MOD
 PLUS:  "+"
@@ -55,7 +57,7 @@ number: OCT_NUMBER | HEX_NUMBER | BIN_NUMBER
 DEC_NUMBER: /-?[0-9]+/
 BIN_NUMBER: /0b[0-1]+/
 HEX_NUMBER: /0x[\da-f]+/
-OCT_NUMBER: /0\o[0-7]+/
+OCT_NUMBER: /0o[0-7]+/
 FIXED_POINT_NUMBER: /[-+]?((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))/
 FLOAT_NUMBER: /[-+]?((\d+\.\d*|\.\d+)(e[-+]?\d+)?|\d+(e[-+]?\d+))[f]/
 
@@ -99,12 +101,14 @@ arguments: _argument (COMMA _argument)*
 _argument: (name ASSIGNMENT)? _rval
 
 expression_statement: _expression STATEMENT_END
-_expression: bin_expression | uniary_expression | call_expression | construct_expression
+_expression: bin_expression | _uniary_expression | call_expression | construct_expression
 
 call_expression: name LPREN arguments? RPREN
 construct_expression: scalar_type_name LPREN arguments? RPREN | LBRACE arguments+  RBRACE
 bin_expression: _rval _expression_operator _rval
-uniary_expression: _expression_operator _rval | _rval _expression_operator
+_uniary_expression: prefix_expression | postfix_expression
+prefix_expression: _expression_operator _rval
+postfix_expression: _rval _expression_operator
 
 _rval: _expression | _value
 _value: literal_value | runtime_value
@@ -133,7 +137,7 @@ _define_statement: class_define | function_define | variable_define | operator_d
 class_define: _DEFINE _STRUCT _type_name (COLON _type_name)? block
 function_define: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN block
 variable_define: scalar_define | aggregate_define
-scalar_define: (scalar_type_name|pointer_type_name) name ASSIGNMENT _rval STATEMENT_END
+scalar_define: (scalar_type_name|pointer_type_name|ref_type_name) name ASSIGNMENT _rval STATEMENT_END
 aggregate_define: scalar_type_name LBRAK _rval RBRAK name ASSIGNMENT _rval STATEMENT_END
 operator_define: _DEFINE _OPERATOR (scalar_type_name|name) LPREN paramaters? RPREN block
 
@@ -141,14 +145,27 @@ _declare_statement: class_declaration | function_declaration | variable_declarat
 class_declaration: _DEFINE _STRUCT _type_name STATEMENT_END
 function_declaration: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN STATEMENT_END
 variable_declaration: scalar_declaration | aggregate_declaration
-scalar_declaration: (scalar_type_name|pointer_type_name) name STATEMENT_END
+scalar_declaration: (scalar_type_name|pointer_type_name|ref_type_name) name STATEMENT_END
 aggregate_declaration: scalar_type_name LBRAK _rval RBRAK name STATEMENT_END
 
+module_statement: MODULE scalar_type_name block
+import_statement: IMPORT scalar_type_name STATEMENT_END
+from_statement: FROM scalar_type_name  IMPORT (name|scalar_type_name) STATEMENT_END
+
 keyword: _STRUCT | _DEFINE | _FUNCTION | _OPERATOR
+       | AUTO | CONST | MUTABLE | MODULE | IMPORT | FROM
+
 _STRUCT: "struct"
 _DEFINE: "def"
 _FUNCTION: "func"
 _OPERATOR: "op"
+
+AUTO: "auto"
+CONST: "const"
+MUTABLE: "mutable"
+MODULE: "module"
+IMPORT: "import"
+FROM: "from"
 
 %import common.WS
 %ignore WS
