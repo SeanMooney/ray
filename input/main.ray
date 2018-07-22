@@ -1,6 +1,7 @@
 import Runtime;
 
 module Test {
+
     def func Int32[] iota(Int8: max){
         Int32 current := 0;
         Int32[max] result;
@@ -44,7 +45,9 @@ module Test {
 
 
 def func Int32 main(Int32: argc, Char**: args){
+
     Int8 max := 42;
+
     {
         from Test import iota;
         printf("iota(%d):\n",max);
@@ -61,5 +64,6 @@ def func Int32 main(Int32: argc, Char**: args){
         auto data := fibRange(max);
         printv(data);
     }
+
     return 0;
 }

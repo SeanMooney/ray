@@ -1,7 +1,7 @@
 #!/bin/bash
 echo
 echo transpileing
-time pipenv run python3 ray.py
+time pipenv run python3 ray.py --prefix input
 echo
 echo fromating
 time clang-format -i output/output.cpp

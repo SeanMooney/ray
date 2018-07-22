@@ -57,10 +57,14 @@ class RayToCpp(object):
             "FLOAT_NUMBER": self.decodeFloat,
             "FIXED_POINT_NUMBER": self.decodeFixed
         }
+        self.included_files = []
 
     def processTree(self, tree, out=sys.stdout):
         for node in tree.children:
             self.processNode(node, out)
+        result = self.included_files
+        self.included_files = []
+        return  result
 
     def processNode(self, node, out=sys.stdout):
         print(self.consume(self.getDecoder(node)(node)),file=out)
