@@ -54,8 +54,8 @@ namespace Runtime {
 #undef FALSE__
 } // namespace Runtime
 
-using namespace Runtime;
 namespace Test {
+using namespace Runtime;
 std::vector<Int32> iota(Int8 max) {
     Int32 current = 0;
     std::vector<Int32> result(max);
@@ -91,6 +91,8 @@ std::vector<Int64> fibRange(Int8 max) {
 }
 struct Object {};
 } // namespace Test
+
+using namespace Runtime;
 Int32 __main__(Int32 argc, Char** args) {
     Int8 max = 42;
     {

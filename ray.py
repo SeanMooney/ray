@@ -1,4 +1,5 @@
 import argparse
+from io import StringIO
 
 from lark import Lark
 
@@ -17,13 +18,23 @@ def main(args):
         #       propagate_positions=True, lexer='standard')
         parser = Lark(grammer.read(), propagate_positions=True)
 
-    transPiler = RayToCpp()
+    transPiler = RayToCpp(args.prefix)
+    data = []
+    processBuffered(parser, transPiler, ['runtime/footer.ray'], data)
+    include_files = [main_file]
+    while include_files:
+        include_files = processBuffered(parser, transPiler, include_files, data)
+    processBuffered(parser, transPiler, ['runtime/header.ray'], data)
     with open(out_file, "w") as output_file:
-        processFiles(parser, transPiler, output_file, ['runtime/header.ray'])
-        include_files = [main_file]
-        while include_files:
-            include_files = processFiles(parser, transPiler, output_file, include_files)
-        processFiles(parser, transPiler, output_file, ['runtime/footer.ray'])
+        for d in reversed(data):
+            print(d, file=output_file)
+
+
+def processBuffered(parser, transPiler, include_files, data):
+    buffer = StringIO()
+    include_files = processFiles(parser, transPiler, buffer, include_files)
+    data.append(buffer.getvalue())
+    return include_files
 
 
 def processFiles(parser, transPiler, output_file, input_files=[]):
@@ -32,8 +43,9 @@ def processFiles(parser, transPiler, output_file, input_files=[]):
         print("parsing: %s." % f)
         with open(f) as input_file:
             tree = parser.parse(input_file.read())
-        transPiler.processTree(tree, output_file)
+        result = transPiler.processTree(tree, output_file)
         print("parsing: %s succeed." % f)
+        return result
 
 
 if __name__ == "__main__":

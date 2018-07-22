@@ -5,6 +5,7 @@ _statement:  comment | _define_statement | _declare_statement
                      | condtional_statement | compiler_statement
                      | _iteration_statement | module_statement
                      | import_statement | from_statement
+                     | include_statement
 STATEMENT_END: ";"
 comment: /\#[^\n]*/
 
@@ -151,6 +152,7 @@ aggregate_declaration: scalar_type_name LBRAK _rval RBRAK name STATEMENT_END
 module_statement: MODULE scalar_type_name block
 import_statement: IMPORT scalar_type_name STATEMENT_END
 from_statement: FROM scalar_type_name  IMPORT (name|scalar_type_name) STATEMENT_END
+include_statement: INCLUDE /[a-z\/]+/ STATEMENT_END
 
 keyword: _STRUCT | _DEFINE | _FUNCTION | _OPERATOR
        | AUTO | CONST | MUTABLE | MODULE | IMPORT | FROM
@@ -166,6 +168,7 @@ MUTABLE: "mutable"
 MODULE: "module"
 IMPORT: "import"
 FROM: "from"
+INCLUDE: "include"
 
 %import common.WS
 %ignore WS

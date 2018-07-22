@@ -1,48 +1,6 @@
+include test;
+
 import Runtime;
-
-module Test {
-
-    def func Int32[] iota(Int8: max){
-        Int32 current := 0;
-        Int32[max] result;
-        while(current < max){
-            result[current] := current;
-            current := current + 1;
-        }
-        return result;
-    }
-
-    Int64[64] fibCache;
-    def func Int64 fib(Int8: i){
-        Int64& cached := fibCache[i];
-        if(cached !=0){
-            return cached;
-        }
-        if(i<=1){
-            cached := 1;
-        }elif(i==2){
-            cached := 2;
-        }else{
-            cached := fib(i-2) + fib(i-1);
-        }
-        return cached;
-    }
-
-    def func Int64[] fibRange(Int8: max){
-        Int64[max] result;
-        Int8 current := 0;
-        while(current < max){
-            result[current] := fib(current);
-            current := current + 1;
-        }
-        return result;
-    }
-
-    def struct Object {}
-
-}
-
-
 
 def func Int32 main(Int32: argc, Char**: args){
 

@@ -1,12 +1,15 @@
-import sys
+import copy
 import decimal
+import sys
+
 from functools import partial
 
 from lark.lexer import Token
 
 class RayToCpp(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, prefix, **kwargs):
+        self.prefix = prefix
         self.targetLang = "cpp"
         self.nodeDecoders = {
             "literal_value": self.decodeLiteral,
@@ -30,6 +33,7 @@ class RayToCpp(object):
             "assignment_statement": self.decodeAssignment,
             "module_statement": self.decodeModule,
             "import_statement": self.decodeImport,
+            "include_statement": self.decodeInclude,
             "from_statement": self.decodeFrom,
             "block_statement": self.decodeBlock,
             "block": self.decodeBlock,
@@ -60,11 +64,10 @@ class RayToCpp(object):
         self.included_files = []
 
     def processTree(self, tree, out=sys.stdout):
+        self.included_files = []
         for node in tree.children:
             self.processNode(node, out)
-        result = self.included_files
-        self.included_files = []
-        return  result
+        return  copy.deepcopy(reversed(self.included_files))
 
     def processNode(self, node, out=sys.stdout):
         print(self.consume(self.getDecoder(node)(node)),file=out)
@@ -446,6 +449,13 @@ class RayToCpp(object):
     def decodeImport(self, node):
         raw = node.children[1]
         yield "using namespace %s;" % self.consume(self.getDecoder(raw)(raw))
+
+    def decodeInclude(self, node):
+        raw = node.children[1]
+        args = (self.prefix, self.consume(self.getDecoder(raw)(raw)))
+        self.included_files.append("%s/%s.ray" % args)
+        yield ""
+
 
     def decodeFrom(self, node):
         raw = node.children
