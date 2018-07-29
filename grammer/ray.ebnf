@@ -24,6 +24,10 @@ pointer_type_name: /[A-Z][a-zA-Z0-9_]*[\*]+/ | AUTO "*"
 constant_name: /[A-Z_]+/
 name: /[_a-z][a-zA-Z0-9_]*/
 
+_template_names: scalar_type_name | template_type_name
+template_type_name: /[A-Z][a-zA-Z0-9_]*/ template_args
+template_args: _LANGLE _template_names (_COMMA _template_names)* _RANGLE
+
 _expression_operator: _comparision_ops | _logic_ops | _math_ops | subscript
 
 subscript: LBRAK _rval RBRAK
@@ -46,9 +50,9 @@ _comparision_ops: NOTEQ | EQ | GTEQ | LTEQ
                   | GT | LT | CMP
 EQ: "=="
 NOTEQ: "!="
-GT: ">"
+GT: _RANGLE
 GTEQ: ">="
-LT: "<"
+LT: _LANGLE
 LTEQ: "<="
 CMP: "<=>"
 
@@ -81,19 +85,33 @@ POWERASSIGN: "^="
 ORASSIGN: "|="
 ANDASSIGN: "&="
 
+_PIPE: "¦"
+_COMMA: ","
+_COLON: ":"
+_LPREN:  "("
+_RPREN:  ")"
+_LBRAK:  "["
+_RBRAK:  "]"
+_LBRACE: "{"
+_RBRACE: "}"
+_LANGLE: "<"
+_RANGLE: ">"
+_ESCAPE: "\\"
 
-PIPE: "¦"
-COMMA: ","
-COLON: ":"
-LPREN:  "("
-RPREN:  ")"
-LBRAK:  "["
-RBRAK:  "]"
-LBRACE: "{"
-RBRACE: "}"
-LANGLE: "<"
-RANGLE: ">"
-ESCAPE: "\\"
+PIPE:   _PIPE
+COMMA:  _COMMA
+COLON:  _COLON
+LPREN:  _LPREN
+RPREN:  _RPREN
+LBRAK:  _LBRAK
+RBRAK:  _RBRAK
+LBRACE: _LBRACE
+RBRACE: _RBRACE
+LANGLE: _LANGLE
+RANGLE: _RANGLE
+ESCAPE: _ESCAPE
+
+
 
 paramaters: _paramater (COMMA _paramater)*
 _paramater: _type_name COLON name (ASSIGNMENT _value)?
@@ -129,13 +147,14 @@ _iteration_statement: while_statement | for_statement
 while_statement: "while" LPREN _rval RPREN block
 for_statement: "for" LPREN _type_name name "in" _rval RPREN block
 
-compiler_statement: "@compiler" LANGLE name RANGLE escaped_block
+compiler_statement: "@compiler" LANGLE name GT escaped_block
 escaped_block: /((<\[\{)([\s\S]*?)(\}\]>))/
 _OPEN_ESCAPE_BLOCK: "<[{"
 _CLOSE_ESCAPE_BLOCK: "}]>"
 
-_define_statement: class_define | function_define | variable_define | operator_define
+_define_statement: class_define | function_define | variable_define | operator_define | template_class_define
 class_define: _DEFINE _STRUCT _type_name (COLON _type_name)? block
+template_class_define: _DEFINE _STRUCT template_type_name block
 function_define: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN block
 variable_define: scalar_define | aggregate_define
 scalar_define: (scalar_type_name|pointer_type_name|ref_type_name) name ASSIGNMENT _rval STATEMENT_END

@@ -1,0 +1,6 @@
+start: _statement+
+_statement:  include_statement | RAW
+include_statement:  /include[\s]*([a-zA-Z0-9\.\/]+)[\s]*;/
+RAW: /(?!(?:include)[\s]*([a-zA-Z0-9\.\/]+)[\s]*(?:;)[\s]*).+/
+%import common.WS
+%ignore WS

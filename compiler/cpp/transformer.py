@@ -21,6 +21,7 @@ class RayToCpp(object):
             "aggregate_define": self.decodeAggregateDef,
             "aggregate_declaration": self.decodeAggregateDeclare,
             "class_define": self.decodeClassDef,
+            "template_class_define": self.decodeTemplateClassDef,
             "function_define": self.decodeFunctionDef,
             "operator_define": self.decodeOperator,
             "construct_expression": self.decodeConstruct,
@@ -33,7 +34,6 @@ class RayToCpp(object):
             "assignment_statement": self.decodeAssignment,
             "module_statement": self.decodeModule,
             "import_statement": self.decodeImport,
-            "include_statement": self.decodeInclude,
             "from_statement": self.decodeFrom,
             "block_statement": self.decodeBlock,
             "block": self.decodeBlock,
@@ -61,13 +61,10 @@ class RayToCpp(object):
             "FLOAT_NUMBER": self.decodeFloat,
             "FIXED_POINT_NUMBER": self.decodeFixed
         }
-        self.included_files = []
 
     def processTree(self, tree, out=sys.stdout):
-        self.included_files = []
         for node in tree.children:
             self.processNode(node, out)
-        return  copy.deepcopy(reversed(self.included_files))
 
     def processNode(self, node, out=sys.stdout):
         print(self.consume(self.getDecoder(node)(node)),file=out)
@@ -182,6 +179,20 @@ class RayToCpp(object):
 
     def decodeClassDef(self, node):
         child_nodes = node.children
+        params = {
+            "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
+            "block": self.consume(self.decodeBlock(child_nodes[-1])),
+            "parent": ""
+        }
+        if len(child_nodes) == 4:
+            params["parent"] = ': public ' + self.consume(self.decodeParams(child_nodes[2]))
+
+        cpp = "struct %(type)s %(parent)s %(block)s;"
+        yield (cpp % params).replace('\n;',';')
+
+    def decodeTemplateClassDef(self, node):
+        child_nodes = node.children
+        template_args = node.children[1:-1]
         params = {
             "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
             "block": self.consume(self.decodeBlock(child_nodes[-1])),
@@ -449,13 +460,6 @@ class RayToCpp(object):
     def decodeImport(self, node):
         raw = node.children[1]
         yield "using namespace %s;" % self.consume(self.getDecoder(raw)(raw))
-
-    def decodeInclude(self, node):
-        raw = node.children[1]
-        args = (self.prefix, self.consume(self.getDecoder(raw)(raw)))
-        self.included_files.append("%s/%s.ray" % args)
-        yield ""
-
 
     def decodeFrom(self, node):
         raw = node.children

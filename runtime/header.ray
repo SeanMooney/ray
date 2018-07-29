@@ -1,6 +1,6 @@
 @compiler<cpp><[{
 #include <cstdint>
-#include <iostream>
+#include <stdio.h>
 #include <vector>
 
 namespace Runtime {
@@ -19,25 +19,25 @@ namespace Runtime {
 
     using Char=char;
     using Void=void;
-    using String=std::string;
+    using CString=const char*;
 
     #define TRUE__ true
     #define FALSE__ false
 
-    void print(String msg){
-        std::cout << msg;
+    void print(CString msg){
+        printf("%s",msg);
     }
 
     template<typename T>
     void printv(std::vector<T> vec){
-        int pos=0;
+        Int32 pos=0;
         for(T& val : vec){
-            std::cout << "element " << pos++ << ":" << val << '\n';
+            printf("Element(%d): %ld\n",pos++,(Int64)val);
         }
     }
 
-    void println(String msg){
-        std::cout << msg << '\n';
+    void println(CString msg){
+        printf("%s\n",msg);
     }
 
 }
@@ -55,11 +55,11 @@ module Runtime {
     def struct Bool{}
     def struct True{
         def op bool(){return TRUE__;}
-        def op String(){return "True";}
+        def op CString(){return "True";}
     }
     def struct False{
         def op bool(){return FALSE__;}
-        def op String(){return "False";}
+        def op CString(){return "False";}
     }
 
 }

@@ -1,0 +1,7 @@
+module Ray {
+
+    def struct Pair{
+        
+    }
+
+}

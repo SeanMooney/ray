@@ -22,7 +22,7 @@ import Runtime;
         }elif(i==2){
             cached := 2;
         }else{
-            cached := fib(i-2) + fib(i-1);
+            cached := fib(i - 2) + fib(i-1);
         }
         return cached;
     }
