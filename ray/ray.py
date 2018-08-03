@@ -4,7 +4,8 @@ from io import StringIO
 from lark import Lark
 
 from cpp.transformer import RayToCpp
-from preprocessor import IncludeProcessor
+from phase.preprocessor import IncludeProcessor
+from phase.inference import SymbolProcessor
 
 
 def main(args):
@@ -24,7 +25,12 @@ def main(args):
     tree = None
     with open(unity_file) as inpute_file:
         tree = parser.parse(inpute_file.read())
+    symbol_builder = SymbolProcessor()
+    symbol_builder.processTree(tree)
     transPiler = RayToCpp(args.prefix)
+    print("printing symbols  start \n\n\n")
+    print(symbol_builder.global_scope)
+    print("\n\n\nprinting symbols  end")
     with open(out_file, "w") as output_file:
         transPiler.processTree(tree,output_file)
 

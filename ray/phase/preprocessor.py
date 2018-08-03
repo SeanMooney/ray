@@ -1,7 +1,3 @@
-# import copy
-import decimal
-import sys
-
 from functools import partial
 from io import StringIO
 
@@ -14,7 +10,7 @@ class IncludeProcessor(object):
         self.prefix = prefix
         with open("grammer/include.ebnf") as grammer:
             self.parser = Lark(grammer.read(), parser='lalr',
-                          propagate_positions=True, lexer='standard')
+                               lexer='standard')
         self.nodeDecoders = {
             "include_statement": self.decodeInclude,
         }
@@ -49,13 +45,13 @@ class IncludeProcessor(object):
             print("include: %s succeed." % f)
         return result
 
-    def processTree(self, tree, out=sys.stdout):
+    def processTree(self, tree, out):
         self.included_files = []
         for node in tree.children:
             self.processNode(node, out)
         return  list(reversed(self.included_files))
 
-    def processNode(self, node, out=sys.stdout):
+    def processNode(self, node, out):
         result = self.getDecoder(node)(node)
         print(result,file=out)
 

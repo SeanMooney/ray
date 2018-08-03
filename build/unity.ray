@@ -95,7 +95,7 @@ def struct Object {}
 
 
 import Runtime;
-def struct Pair<T,U>{}
+#def struct Pair<T,U>{}
 def func Int32 main(Int32: argc, Char**: args){
 Int8 max := 64;
 println("hello world");

@@ -101,8 +101,7 @@ struct Object  {
 };
 }
 using namespace Runtime;
-struct Pair  {
-};
+//def struct Pair<T,U>{}
 Int32 __main__( Int32  argc, Char**  args  ){
 Int8 max = 64 ;
 println("hello world" );
