@@ -1,4 +1,4 @@
-@compiler<cpp><[{
+@@emit<cpp><[{
 #include <cstdint>
 #include <stdio.h>
 #include <vector>
@@ -33,12 +33,27 @@ printf("%s\n",msg);
 }
 }
 }]>
-@compiler<python3><[{
+@@emit<python3><[{
 # this should be omited from the compiled form the output
 # as the only valid target lanugage is cpp
 }]>
 module Runtime {
-def struct Bool{}
+@@type Int8;
+@@type Int16;
+@@type Int32;
+@@type Int64;
+@@type UInt8;
+@@type UInt16;
+@@type UInt32;
+@@type UInt64;
+@@type Float32;
+@@type Float64;
+@@type Char;
+@@type Void;
+@@type CString;
+@@func Void print(CString: msg);
+@@func Void println(CString: msg);
+# def struct Bool{}
 def struct True{
 def op bool(){return TRUE__;}
 def op CString(){return "True";}
@@ -48,75 +63,38 @@ def op bool(){return FALSE__;}
 def op CString(){return "False";}
 }
 }
-@compiler<cpp><[{
+@@emit<cpp><[{
 namespace Runtime {
 #undef TRUE__
 #undef FALSE__
 }
 }]>
 
-module Test {
-import Runtime;
-def func Int32[] iota(Int8: max){
-Int32 current := 0;
-Int32[max] result;
-while(current < max){
-result[current] := current;
-current := current + 1;
+module Utils {
+from Runtime import CString;
+def func CString message(){
+return "hello from utils";
 }
-return result;
-}
-Int64[64] fibCache;
-def func Int64 fib(Int8: i){
-Int64& cached := fibCache[i];
-if(cached !=0){
-return cached;
-}
-if(i<=1){
-cached := 1;
-}elif(i==2){
-cached := 2;
-}else{
-cached := fib(i - 2) + fib(i-1);
-}
-return cached;
-}
-def func Int64[] fibRange(Int8: max){
-Int64[max] result;
-Int8 current := 0;
-while(current < max){
-result[current] := fib(current);
-current := current + 1;
-}
-return result;
-}
-def struct Object {}
 }
 
 
+module Temp{
 import Runtime;
-#def struct Pair<T,U>{}
-def func Int32 main(Int32: argc, Char**: args){
-Int8 max := 64;
-println("hello world");
-{
-from Test import iota;
-printf("iota(%d):\n",max);
-Int32[max] data;
-data := iota(max);
-printv(data);
+def func Void printMessage(CString:msg){
+println(msg);
 }
-# from Test import Object;
-{
-import Test;
-printf("fibRange(%d):\n",max);
-auto data := fibRange(max);
-printv(data);
 }
+from Runtime import Int32;
+from Runtime import Char;
+def func Int32 main( Int32: argc, Char**: args){
+from Temp import printMessage;
+Int32 x := 42;
+Int32[100] y;
+printMessage("hello world");
 return 0;
 }
 
-@compiler<cpp><[{
+@@emit<cpp><[{
 Int32 main(Int32 argc, Char** args){ return __main__(argc,args);}
 }]>
 

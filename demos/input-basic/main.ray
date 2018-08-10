@@ -1,0 +1,31 @@
+include test ;
+import Runtime;
+
+#def struct Pair<T,U>{}
+
+def func Int32 main(Int32: argc, Char**: args){
+
+    Int8 max := 64;
+
+    println("hello world");
+
+    {
+        from Test import iota;
+        printf("iota(%d):\n",max);
+        Int32[max] data;
+        data := iota(max);
+        printv(data);
+    }
+
+    # from Test import Object;
+
+    {
+        import Test;
+        printf("fibRange(%d):\n",max);
+        auto data := fibRange(max);
+        printv(data);
+    }
+
+    
+    return 0;
+}

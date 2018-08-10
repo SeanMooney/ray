@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 lark-parser = "*"
 pydot = "*"
+"e1839a8" = {path = ".", editable = true}
 
 [dev-packages]
 pylint = "*"

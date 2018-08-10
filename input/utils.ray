@@ -1,0 +1,6 @@
+module Utils {
+    from Runtime import CString;
+    def func CString message(){
+        return "hello from utils";
+    }
+}

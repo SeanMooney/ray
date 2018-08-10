@@ -21,6 +21,9 @@ class RayToCpp(object):
             "aggregate_define": self.decodeAggregateDef,
             "aggregate_declaration": self.decodeAggregateDeclare,
             "class_define": self.decodeClassDef,
+            "class_declaration": self.decodeClassDecl,
+            "extern_type": self.decodeExternType,
+            "extern_func": self.decodeExternFunc,
             "template_class_define": self.decodeTemplateClassDef,
             "function_define": self.decodeFunctionDef,
             "operator_define": self.decodeOperator,
@@ -30,7 +33,7 @@ class RayToCpp(object):
             "subscript": self.decodeSubscript,
             "call_expression": self.decodeCall,
             "bin_expression": self.decodeBinExpression,
-            "compiler_statement": self.decodeCompilerStatement,
+            "emit_statement": self.decodeEmitStatement,
             "assignment_statement": self.decodeAssignment,
             "module_statement": self.decodeModule,
             "import_statement": self.decodeImport,
@@ -69,7 +72,7 @@ class RayToCpp(object):
     def processNode(self, node, out=sys.stdout):
         print(self.consume(self.getDecoder(node)(node)),file=out)
 
-    def decodeCompilerStatement(self, node):
+    def decodeEmitStatement(self, node):
         raw = node.children
         if raw[1].children[0].value == self.targetLang:
             sub_node = raw[3]
@@ -189,6 +192,26 @@ class RayToCpp(object):
 
         cpp = "struct %(type)s %(parent)s %(block)s;"
         yield (cpp % params).replace('\n;',';')
+    
+    def decodeClassDecl(self, node):
+        child_nodes = node.children
+        params = {
+            "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
+            "parent": ""
+        }
+        if len(child_nodes) == 4:
+            params["parent"] = ': public ' + self.consume(self.decodeParams(child_nodes[2]))
+
+        cpp = "struct %(type)s %(parent)s;"
+        yield (cpp % params).replace('\n;',';')
+        
+    def decodeExternType(self, node):
+        yield ""    
+        # TODO emit comment containing external type    
+
+    def decodeExternFunc(self, node):
+        yield ""
+        # TODO emit comment containing external fuction
 
     def decodeTemplateClassDef(self, node):
         child_nodes = node.children

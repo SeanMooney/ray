@@ -2,7 +2,7 @@ start: _statement+
 _statement:  comment | _define_statement | _declare_statement
                      | assignment_statement | block_statement
                      | expression_statement | return_statement
-                     | condtional_statement | compiler_statement
+                     | condtional_statement | _compiler_statement
                      | _iteration_statement | module_statement
                      | import_statement | from_statement
                      | include_statement
@@ -147,7 +147,13 @@ _iteration_statement: while_statement | for_statement
 while_statement: "while" LPREN _rval RPREN block
 for_statement: "for" LPREN _type_name name "in" _rval RPREN block
 
-compiler_statement: "@compiler" LANGLE name RANGLE escaped_block
+_compiler_statement: emit_statement | _extern_statements
+emit_statement: "@@emit" LANGLE name RANGLE escaped_block
+_extern_statements: extern_type | extern_var | extern_func | extern_module
+extern_type: "@@type" _type_name (LBRACE _extern_statements+  RBRACE | STATEMENT_END )
+extern_func: "@@func" _type_name name LPREN paramaters? RPREN STATEMENT_END
+extern_var: "@@var" variable_declaration
+extern_module: "@@module" scalar_type_name (LBRACE _extern_statements+  RBRACE | STATEMENT_END )
 escaped_block: /((<\[\{)([\s\S]*?)(\}\]>))/
 _OPEN_ESCAPE_BLOCK: "<[{"
 _CLOSE_ESCAPE_BLOCK: "}]>"

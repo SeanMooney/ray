@@ -31,6 +31,7 @@ def main(args):
     print("printing symbols  start \n\n\n")
     print(symbol_builder.global_scope)
     print("\n\n\nprinting symbols  end")
+    # print(symbol_builder.func_table['main'])
     with open(out_file, "w") as output_file:
         transPiler.processTree(tree,output_file)
 

@@ -1,4 +1,4 @@
-@compiler<cpp><[{
+@@emit<cpp><[{
 
 Int32 main(Int32 argc, Char** args){ return __main__(argc,args);}
 

@@ -1,4 +1,4 @@
-@compiler<cpp><[{
+@@emit<cpp><[{
 #include <cstdint>
 #include <stdio.h>
 #include <vector>
@@ -44,15 +44,35 @@ namespace Runtime {
 
 }]>
 
-@compiler<python3><[{
+@@emit<python3><[{
 # this should be omited from the compiled form the output
 # as the only valid target lanugage is cpp
 }]>
 
 
 module Runtime {
+    
+    @@type Int8;
+    @@type Int16;
+    @@type Int32;
+    @@type Int64;
 
-    def struct Bool{}
+    @@type UInt8;
+    @@type UInt16;
+    @@type UInt32;
+    @@type UInt64;
+
+    @@type Float32;
+    @@type Float64;
+
+    @@type Char;
+    @@type Void;
+    @@type CString;
+
+    @@func Void print(CString: msg);
+    @@func Void println(CString: msg);
+
+    # def struct Bool{}
     def struct True{
         def op bool(){return TRUE__;}
         def op CString(){return "True";}
@@ -64,7 +84,7 @@ module Runtime {
 
 }
 
-@compiler<cpp><[{
+@@emit<cpp><[{
 namespace Runtime {
 #undef TRUE__
 #undef FALSE__

@@ -1,1 +1,5 @@
 a.out
+__pycache__
+.idea
+.vscode
+ray.egg-info
