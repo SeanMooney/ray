@@ -69,15 +69,6 @@ namespace Runtime {
 #undef FALSE__
 }
 }]>
-
-module Utils {
-from Runtime import CString;
-def func CString message(){
-return "hello from utils";
-}
-}
-
-
 module Temp{
 import Runtime;
 def func Void printMessage(CString:msg){
@@ -93,8 +84,12 @@ Int32[100] y;
 printMessage("hello world");
 return 0;
 }
-
+module Utils {
+from Runtime import CString;
+def func CString message(){
+return "hello from utils";
+}
+}
 @@emit<cpp><[{
 Int32 main(Int32 argc, Char** args){ return __main__(argc,args);}
 }]>
-

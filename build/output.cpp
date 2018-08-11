@@ -46,10 +46,6 @@ namespace Runtime {
 #undef FALSE__
 } // namespace Runtime
 
-namespace Utils {
-using CString = Runtime::CString;
-CString message() { return "hello from utils"; }
-} // namespace Utils
 namespace Temp {
 using namespace Runtime;
 Void printMessage(CString msg) { println(msg); }
@@ -63,5 +59,9 @@ Int32 __main__(Int32 argc, Char** args) {
     printMessage("hello world");
     return 0;
 }
+namespace Utils {
+using CString = Runtime::CString;
+CString message() { return "hello from utils"; }
+} // namespace Utils
 
 Int32 main(Int32 argc, Char** args) { return __main__(argc, args); }

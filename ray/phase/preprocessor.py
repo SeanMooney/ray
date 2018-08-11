@@ -14,49 +14,63 @@ class IncludeProcessor(object):
         self.nodeDecoders = {
             "include_statement": self.decodeInclude,
         }
-        self.included_files = []
+        self.all_includes = {}
 
-    def processSrc(self,main_filename,output_file):
-        data = []
-        self.processBuffered(['runtime/footer.ray'], data)
-        include_files = [main_filename]
+    def processSrc(self, main_filename, output_file):
+        include_files = ['runtime/header.ray', main_filename]
         while include_files:
-            include_files = self.processBuffered(include_files, data)
-        self.processBuffered(['runtime/header.ray'], data)
-        for d in reversed(data):
-            print(d, file=output_file)
+            include_files = self.processSrcFiles(include_files)
+        include_files = ['runtime/footer.ray']
+        while include_files: # NOTE: This will normally loop once
+            include_files = self.processSrcFiles(include_files)
+        self.unifySrc(output_file)
 
-    def processBuffered(self, include_files, data):
-        buffer = StringIO()
-        include_files = self.processFiles(buffer, include_files)
-        data.append(buffer.getvalue())
+    def unifySrc(self, output_file):
+        for tree in self.all_includes.values():
+            self.processTree(tree,output_file)
+
+    def processSrcFiles(self, include_files):
+        for file in include_files:
+            if file not in  self.all_includes:
+                self.all_includes[file] = None
+        for filename in include_files:
+            found_includes = self.extractIncludes(filename)
+            include_files = set()
+            for file in found_includes:
+                if file not in self.all_includes:
+                    include_files.add(file)
         return include_files
 
-    def processFiles(self, output_file, input_files=[]):
-        result = []
+    def extractIncludes(self, filename):
         tree = None
-        for f in input_files:
-            print("processing includes for: %s." % f)
-            with open(f) as input_file:
-                tree = self.parser.parse(input_file.read())
-            found = self.processTree(tree, output_file)
-            for f in found:
-                result.append(f)
-            print("include: %s succeed." % f)
-        return result
+        includes = set()
+        with open(filename) as input:
+            tree = self.parser.parse(input.read())
+        for node in tree.children:
+            if self.isInclude(node):
+                includes.add(self.extractInclude(node))
+        self.all_includes[filename] = tree
+        return includes
+    
+    def extractInclude(self, node):
+        raw = node.children[0]
+        result = self.getDecoder(raw)(raw)
+        args = (self.prefix, result.replace('include','').replace(' ', '').replace(';',''))
+        return "%s/%s.ray" % args
+
+    def isInclude(self,node):
+        return ((not isinstance(node, Token)) 
+                and node.data == 'include_statement')
 
     def processTree(self, tree, out):
-        self.included_files = []
         for node in tree.children:
             self.processNode(node, out)
-        return  list(reversed(self.included_files))
 
     def processNode(self, node, out):
-        result = self.getDecoder(node)(node)
-        print(result,file=out)
+        if self.isInclude(node): return
+        print(self.decodeRaw(node),file=out)
 
     def decodeRaw(self, node):
-        
         if not isinstance(node, Token):
             result = []
             for child in node.children:
@@ -66,10 +80,6 @@ class IncludeProcessor(object):
             return str(node)
 
     def decodeInclude(self, node):
-        raw = node.children[0]
-        result = self.getDecoder(raw)(raw)
-        args = (self.prefix, result.replace('include','').replace(' ', '').replace(';',''))
-        self.included_files.append("%s/%s.ray" % args)
         return ""
         
     def getDecoder(self, node, default=decodeRaw):
