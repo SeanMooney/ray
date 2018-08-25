@@ -1,4 +1,4 @@
-include test ;
+@@include test;
 import Runtime;
 
 #def struct Pair<T,U>{}

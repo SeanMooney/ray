@@ -16,6 +16,7 @@ using Float64=double;
 using Char=char;
 using Void=void;
 using CString=const char*;
+using CStringPtr=const char**;
 #define TRUE__ true
 #define FALSE__ false
 void print(CString msg){
@@ -51,6 +52,7 @@ module Runtime {
 @@type Char;
 @@type Void;
 @@type CString;
+@@type CStringPtr;
 @@func Void print(CString: msg);
 @@func Void println(CString: msg);
 # def struct Bool{}
@@ -69,27 +71,33 @@ namespace Runtime {
 #undef FALSE__
 }
 }]>
-module Temp{
-import Runtime;
-def func Void printMessage(CString:msg){
-println(msg);
-}
-}
-from Runtime import Int32;
-from Runtime import Char;
-def func Int32 main( Int32: argc, Char**: args){
-from Temp import printMessage;
-Int32 x := 42;
-Int32[100] y;
-printMessage("hello world");
-return 0;
-}
 module Utils {
 from Runtime import CString;
 def func CString message(){
 return "hello from utils";
 }
 }
+module Temp{
+import Runtime;
+def func Void printMessage(CString:msg){
+print(msg);
+}
+}
+module Temp{
+import Runtime;
+def func Void printMessageln(CString:msg){
+println(msg);
+}
+}
+from Runtime import Int32;
+from Runtime import CStringPtr;
+def func Int32 main( Int32: argc, CStringPtr: args){
+from Temp import printMessage;
+Int32 x := 42;
+Int32[100] y;
+printMessage("hello world");
+return 0;
+}
 @@emit<cpp><[{
-Int32 main(Int32 argc, Char** args){ return __main__(argc,args);}
+Int32 main(Int32 argc, const char** args){ return __main__(argc,args);}
 }]>

@@ -20,6 +20,7 @@ namespace Runtime {
     using Char=char;
     using Void=void;
     using CString=const char*;
+    using CStringPtr=const char**;
 
     #define TRUE__ true
     #define FALSE__ false
@@ -68,6 +69,7 @@ module Runtime {
     @@type Char;
     @@type Void;
     @@type CString;
+    @@type CStringPtr;
 
     @@func Void print(CString: msg);
     @@func Void println(CString: msg);

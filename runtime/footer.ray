@@ -1,5 +1,5 @@
 @@emit<cpp><[{
 
-Int32 main(Int32 argc, Char** args){ return __main__(argc,args);}
+Int32 main(Int32 argc, const char** args){ return __main__(argc,args);}
 
 }]>

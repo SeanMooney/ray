@@ -16,6 +16,7 @@ using Float64 = double;
 using Char = char;
 using Void = void;
 using CString = const char*;
+using CStringPtr = const char**;
 #define TRUE__ true
 #define FALSE__ false
 void print(CString msg) { printf("%s", msg); }
@@ -46,22 +47,26 @@ namespace Runtime {
 #undef FALSE__
 } // namespace Runtime
 
+namespace Utils {
+using CString = Runtime::CString;
+CString message() { return "hello from utils"; }
+} // namespace Utils
 namespace Temp {
 using namespace Runtime;
-Void printMessage(CString msg) { println(msg); }
+Void printMessage(CString msg) { print(msg); }
+} // namespace Temp
+namespace Temp {
+using namespace Runtime;
+Void printMessageln(CString msg) { println(msg); }
 } // namespace Temp
 using Int32 = Runtime::Int32;
-using Char = Runtime::Char;
-Int32 __main__(Int32 argc, Char** args) {
+using CStringPtr = Runtime::CStringPtr;
+Int32 __main__(Int32 argc, CStringPtr args) {
     auto& printMessage = Temp::printMessage;
     Int32 x = 42;
     std::vector<Int32> y(100);
     printMessage("hello world");
     return 0;
 }
-namespace Utils {
-using CString = Runtime::CString;
-CString message() { return "hello from utils"; }
-} // namespace Utils
 
-Int32 main(Int32 argc, Char** args) { return __main__(argc, args); }
+Int32 main(Int32 argc, const char** args) { return __main__(argc, args); }

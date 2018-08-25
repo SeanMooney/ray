@@ -17,29 +17,29 @@ class IncludeProcessor(object):
         self.all_includes = {}
 
     def processSrc(self, main_filename, output_file):
-        include_files = ['runtime/header.ray', main_filename]
+        include_files = ['runtime/footer.ray', main_filename]
         while include_files:
             include_files = self.processSrcFiles(include_files)
-        include_files = ['runtime/footer.ray']
+        include_files = ['runtime/header.ray']
         while include_files: # NOTE: This will normally loop once
             include_files = self.processSrcFiles(include_files)
         self.unifySrc(output_file)
 
     def unifySrc(self, output_file):
-        for tree in self.all_includes.values():
-            self.processTree(tree,output_file)
+        for tree in reversed(list(self.all_includes.keys())):
+            self.processTree(self.all_includes[tree],output_file)
 
     def processSrcFiles(self, include_files):
         for file in include_files:
             if file not in  self.all_includes:
                 self.all_includes[file] = None
+        includes = set()
         for filename in include_files:
             found_includes = self.extractIncludes(filename)
-            include_files = set()
             for file in found_includes:
                 if file not in self.all_includes:
-                    include_files.add(file)
-        return include_files
+                    includes.add(file)
+        return includes
 
     def extractIncludes(self, filename):
         tree = None
@@ -55,7 +55,7 @@ class IncludeProcessor(object):
     def extractInclude(self, node):
         raw = node.children[0]
         result = self.getDecoder(raw)(raw)
-        args = (self.prefix, result.replace('include','').replace(' ', '').replace(';',''))
+        args = (self.prefix, result.replace('@@include','').replace(' ', '').replace(';',''))
         return "%s/%s.ray" % args
 
     def isInclude(self,node):
@@ -67,7 +67,8 @@ class IncludeProcessor(object):
             self.processNode(node, out)
 
     def processNode(self, node, out):
-        if self.isInclude(node): return
+        if self.isInclude(node): 
+            return
         print(self.decodeRaw(node),file=out)
 
     def decodeRaw(self, node):

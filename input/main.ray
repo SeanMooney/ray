@@ -1,15 +1,24 @@
-include utils;
+@@include utils;
 
 module Temp{
 import Runtime;
 def func Void printMessage(CString:msg){
+    print(msg);
+}
+}
+
+module Temp{
+import Runtime;
+def func Void printMessageln(CString:msg){
     println(msg);
 }
 }
 
+
+
 from Runtime import Int32;
-from Runtime import Char;
-def func Int32 main( Int32: argc, Char**: args){
+from Runtime import CStringPtr;
+def func Int32 main( Int32: argc, CStringPtr: args){
     from Temp import printMessage;
     Int32 x := 42;
     Int32[100] y;
