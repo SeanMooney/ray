@@ -22,8 +22,8 @@ namespace Runtime {
     using CString=const char*;
     using CStringPtr=const char**;
 
-    #define TRUE__ true
-    #define FALSE__ false
+    using True=std::true_type;
+    using False=std::false_type;
 
     void print(CString msg){
         printf("%s",msg);
@@ -74,21 +74,7 @@ module Runtime {
     @@func Void print(CString: msg);
     @@func Void println(CString: msg);
 
-    # def struct Bool{}
-    def struct True{
-        def op bool(){return TRUE__;}
-        def op CString(){return "True";}
-    }
-    def struct False{
-        def op bool(){return FALSE__;}
-        def op CString(){return "False";}
-    }
+    @@type True;
+    @@type False;
 
 }
-
-@@emit<cpp><[{
-namespace Runtime {
-#undef TRUE__
-#undef FALSE__
-}
-}]>
