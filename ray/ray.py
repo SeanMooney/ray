@@ -3,10 +3,10 @@ from io import StringIO
 
 from lark import Lark
 
-from cpp.transformer import RayToCpp
+from code_gen.cpp.transformer import RayToCpp
 from phase.preprocessor import IncludeProcessor
-from phase.inference import SymbolProcessor
-
+# from phase.inference import SymbolProcessor
+from phase.ast_builder import ASTProcessor
 
 def main(args):
 
@@ -25,13 +25,17 @@ def main(args):
     tree = None
     with open(unity_file) as inpute_file:
         tree = parser.parse(inpute_file.read())
-    symbol_builder = SymbolProcessor()
-    symbol_builder.processTree(tree)
-    transPiler = RayToCpp(args.prefix)
-    print("printing symbols  start \n\n\n")
-    print(symbol_builder.global_scope)
-    print("\n\n\nprinting symbols  end")
+    
+    # symbol_builder = SymbolProcessor()
+    # symbol_builder.processTree(tree)
+    # print("printing symbols  start \n\n\n")
+    # print(symbol_builder.global_scope)
+    # print("\n\n\nprinting symbols  end")
     # print(symbol_builder.func_table['main'])
+    astBuilder = ASTProcessor()
+    astBuilder.processTree(tree)
+
+    transPiler = RayToCpp(args.prefix)
     with open(out_file, "w") as output_file:
         transPiler.processTree(tree,output_file)
 

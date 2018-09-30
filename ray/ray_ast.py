@@ -1,3 +1,6 @@
+from itertools import chain
+from six.moves import map as imap
+
 class Field(object):
     def __init__(self, type_def, name, parent, value=None, qualifiers=[]):
         self.type_def = type_def
@@ -8,19 +11,31 @@ class Field(object):
         self.qualifed_name = name if parent is None else "%s%s%s" % (
             parent.name,":",name)
 
+class Paramater(object):
+    def __init__(self, type_def, name, value=None, qualifiers=[]):
+        self.type_def = type_def
+        self.name = name
+        self.value = value
+        self.qualifiers = qualifiers
+
+
 class Scope(object):
     def __init__(self, name="", parent=None, seperator="."):
         self.name = name
         self.parent = parent
         self.seperator = seperator
-        self.qualifed_name = name if parent is None else "%s%s%s" % (
-            parent.name,seperator,name)
+        self.qualifed_name = name if parent is None or parent.qualifed_name == "" else "%s%s%s" % (
+            parent.qualifed_name, seperator,name)
+        self.statements = []
 
+    def __iter__(self):
+        for s in self.statements:
+            yield s
+            
 class Module(Scope):
     def __init__(self, name , parent = None):
         super().__init__(name, parent, '.')
         self.type_defs = {}
-        self.statements = []
         self.scopes = {}
 
 class Block(Scope):
@@ -29,18 +44,18 @@ class Block(Scope):
         super().__init__("block%s" % Block.ident, parent, '-')
         Block.ident+=1
         self.type_defs = {}
-        self.statements = []
         self.scopes = {}
 
 class TypeDef(Scope):
     max_type_id = 0
-    def __init__(self, name, parent, seperator="."):
+    def __init__(self, name, parent, seperator=".", external=False):
         super().__init__(name, parent, seperator)
         self.type_id = TypeDef.max_type_id
         TypeDef.max_type_id+=1
+        self.external = external
 
 class Union(TypeDef):
-    def __init__(self, name, parent,fields={},active=None):
+    def __init__(self, name, parent,fields={}):
         super().__init__(name, parent,':')
         self.fields = fields
 
@@ -62,18 +77,16 @@ class Lamda(TypeDef):
         self.captures = {}
         self.params = {}
         self.returns = {}
-        self.statements = []
 
 class Func(TypeDef):
-    def __init__(self, name, parent):
-        super().__init__(name, parent, ':')
+    def __init__(self, name, parent, external=False):
+        super().__init__(name, parent, ':', external=external)
         self.params = {}
         self.returns = {}
-        self.statements = []
 
 class Struct(TypeDef):
-    def __init__(self, name, parent):
-        super().__init__(name, parent)
+    def __init__(self, name, parent, external=False):
+        super().__init__(name, parent, external=external)
         self.fields = {}
         self.functions = {}
 
@@ -89,6 +102,36 @@ class Mixins(TypeDef):
 
 class Statement(object):
     pass
+
+class ModuleStatement(Statement):
+    def __init__(self, module):
+        self.module = module
+
+class TypeStatement(Statement):
+    def __init__(self, name="", parent=None, seperator="."):
+        self.name = name
+        self.parent = parent
+        self.seperator = seperator
+        self.qualifed_name = name if parent is None or parent.qualifed_name == "" else "%s%s%s" % (
+            parent.qualifed_name, seperator, name)
+
+class StructStatement(TypeStatement):
+    def __init__(self, name, parent, childern=[]):
+        super().__init__(name, parent)
+        self.childern = childern
+        self.type_def = Struct(name, parent, external=False)
+
+class FuncStatement(TypeStatement):
+    def __init__(self, name, parent, return_type,
+                 params=[], childern=[]):
+        super().__init__(name, parent)
+        self.childern = childern
+        self.return_type = return_type
+        self.params = params
+        self.type_def = Func(name, parent, external=False)
+        self.type_def.returns = self.return_type
+        self.type_def.params = self.params
+
 
 class Comment(Statement):
     def __init__(self, text):
@@ -195,31 +238,35 @@ class EmitStatement(CompilerStatement):
         self.block = block
 
 class ExternStatement(CompilerStatement):
-    pass
-
-class ExternTypeStatement(ExternStatement):
-    def __init__(self, name, childern=[]):
-        super().__init__()
+    def __init__(self, name="", parent=None, seperator="."):
         self.name = name
+        self.parent = parent
+        self.seperator = seperator
+        self.qualifed_name = name if parent is None or parent.name == "" else "%s%s%s" % (
+            parent.name,seperator,name)
+class ExternTypeStatement(ExternStatement):
+    def __init__(self, name, parent, childern=[]):
+        super().__init__(name, parent)
         self.childern = childern
+        self.type_def = Struct(name, parent, external=True)
 
 class ExternFuncStatement(ExternStatement):
-    def __init__(self, name, return_type, params=[]):
-        super().__init__()
-        self.name = name
+    def __init__(self, name, parent, return_type, params=[]):
+        super().__init__(name, parent)
         self.return_type = return_type
         self.params = params
+        self.type_def = Func(name, parent, external=True)
+        self.type_def.returns = self.return_type
+        self.type_def.params = self.params
 
 class ExternVarStatement(ExternStatement):
-    def __init__(self, type_def, name):
-        super().__init__()
+    def __init__(self, type_def, name, parent):
+        super().__init__(name, parent)
         self.type_def = type_def
-        self.name = name
 
 class ExternModuleStatement(ExternStatement):
-    def __init__(self, name, childern=[]):
-        super().__init__()
-        self.name = name
+    def __init__(self, name, parent, childern=[]):
+        super().__init__(name, parent)
         self.childern = childern
 
 class RVal(object):

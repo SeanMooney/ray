@@ -6,7 +6,7 @@ from functools import partial
 
 from lark.lexer import Token
 
-class RayToCpp(object):
+class RayToRay(object):
 
     def __init__(self, prefix, **kwargs):
         self.prefix = prefix

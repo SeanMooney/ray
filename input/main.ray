@@ -1,17 +1,33 @@
 @@include utils;
 
 module Temp{
-import Runtime;
+# import Runtime;
+from Runtime import CString;
+from Runtime import Void;
+from Runtime import print;
 def func Void printMessage(CString:msg){
     print(msg);
 }
 }
 
 module Temp{
-import Runtime;
-def func Void printMessageln(CString:msg){
-    println(msg);
-}
+    # import Runtime;
+    from Runtime import CString;
+    from Runtime import Void;
+    from Runtime import println;
+    def func Void printMessageln(CString:msg){
+        println(msg);
+    }
+
+    def struct MyClass{
+     def func CString __str__(){
+         return "<MyClass>";
+     }
+     def func CString __repr__(){
+         return "MyClass()";
+     }
+    }
+
 }
 
 

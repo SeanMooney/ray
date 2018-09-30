@@ -17,8 +17,8 @@ using Char = char;
 using Void = void;
 using CString = const char*;
 using CStringPtr = const char**;
-#define TRUE__ true
-#define FALSE__ false
+using True = std::true_type;
+using False = std::false_type;
 void print(CString msg) { printf("%s", msg); }
 template <typename T> void printv(std::vector<T> vec) {
     Int32 pos = 0;
@@ -29,40 +29,33 @@ template <typename T> void printv(std::vector<T> vec) {
 void println(CString msg) { printf("%s\n", msg); }
 } // namespace Runtime
 
-namespace Runtime {
-
-// def struct Bool{}
-struct True {
-    operator bool() { return TRUE__; }
-    operator CString() { return "True"; }
-};
-struct False {
-    operator bool() { return FALSE__; }
-    operator CString() { return "False"; }
-};
-} // namespace Runtime
-
-namespace Runtime {
-#undef TRUE__
-#undef FALSE__
-} // namespace Runtime
-
+namespace Runtime {}
 namespace Utils {
-using CString = Runtime::CString;
+using CString = ::Runtime::CString;
 CString message() { return "hello from utils"; }
 } // namespace Utils
 namespace Temp {
-using namespace Runtime;
+// import Runtime;
+using CString = ::Runtime::CString;
+using Void = ::Runtime::Void;
+auto& print = ::Runtime::print;
 Void printMessage(CString msg) { print(msg); }
 } // namespace Temp
 namespace Temp {
-using namespace Runtime;
+// import Runtime;
+using CString = ::Runtime::CString;
+using Void = ::Runtime::Void;
+auto& println = ::Runtime::println;
 Void printMessageln(CString msg) { println(msg); }
+struct MyClass {
+    CString __str__() { return "<MyClass>"; }
+    CString __repr__() { return "MyClass()"; }
+};
 } // namespace Temp
-using Int32 = Runtime::Int32;
-using CStringPtr = Runtime::CStringPtr;
+using Int32 = ::Runtime::Int32;
+using CStringPtr = ::Runtime::CStringPtr;
 Int32 __main__(Int32 argc, CStringPtr args) {
-    auto& printMessage = Temp::printMessage;
+    auto& printMessage = ::Temp::printMessage;
     Int32 x = 42;
     std::vector<Int32> y(100);
     printMessage("hello world");

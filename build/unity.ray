@@ -17,8 +17,8 @@ using Char=char;
 using Void=void;
 using CString=const char*;
 using CStringPtr=const char**;
-#define TRUE__ true
-#define FALSE__ false
+using True=std::true_type;
+using False=std::false_type;
 void print(CString msg){
 printf("%s",msg);
 }
@@ -55,22 +55,9 @@ module Runtime {
 @@type CStringPtr;
 @@func Void print(CString: msg);
 @@func Void println(CString: msg);
-# def struct Bool{}
-def struct True{
-def op bool(){return TRUE__;}
-def op CString(){return "True";}
+@@type True;
+@@type False;
 }
-def struct False{
-def op bool(){return FALSE__;}
-def op CString(){return "False";}
-}
-}
-@@emit<cpp><[{
-namespace Runtime {
-#undef TRUE__
-#undef FALSE__
-}
-}]>
 module Utils {
 from Runtime import CString;
 def func CString message(){
@@ -78,15 +65,29 @@ return "hello from utils";
 }
 }
 module Temp{
-import Runtime;
+# import Runtime;
+from Runtime import CString;
+from Runtime import Void;
+from Runtime import print;
 def func Void printMessage(CString:msg){
 print(msg);
 }
 }
 module Temp{
-import Runtime;
+# import Runtime;
+from Runtime import CString;
+from Runtime import Void;
+from Runtime import println;
 def func Void printMessageln(CString:msg){
 println(msg);
+}
+def struct MyClass{
+def func CString __str__(){
+return "<MyClass>";
+}
+def func CString __repr__(){
+return "MyClass()";
+}
 }
 }
 from Runtime import Int32;

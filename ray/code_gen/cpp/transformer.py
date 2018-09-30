@@ -24,7 +24,6 @@ class RayToCpp(object):
             "class_declaration": self.decodeClassDecl,
             "extern_type": self.decodeExternType,
             "extern_func": self.decodeExternFunc,
-            "template_class_define": self.decodeTemplateClassDef,
             "function_define": self.decodeFunctionDef,
             "operator_define": self.decodeOperator,
             "construct_expression": self.decodeConstruct,
@@ -212,20 +211,6 @@ class RayToCpp(object):
     def decodeExternFunc(self, node):
         yield ""
         # TODO emit comment containing external fuction
-
-    def decodeTemplateClassDef(self, node):
-        child_nodes = node.children
-        template_args = node.children[1:-1]
-        params = {
-            "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
-            "block": self.consume(self.decodeBlock(child_nodes[-1])),
-            "parent": ""
-        }
-        if len(child_nodes) == 4:
-            params["parent"] = ': public ' + self.consume(self.decodeParams(child_nodes[2]))
-
-        cpp = "struct %(type)s %(parent)s %(block)s;"
-        yield (cpp % params).replace('\n;',';')
 
     def decodeBinExpression(self, node):
         lhs = node.children[0]
@@ -481,8 +466,16 @@ class RayToCpp(object):
         yield "".join(data[:-1])
 
     def decodeImport(self, node):
-        raw = node.children[1]
-        yield "using namespace %s;" % self.consume(self.getDecoder(raw)(raw))
+        raw = node.children
+        mod = raw[1]
+        name = raw[3] if len(raw) == 4 else mod
+        module = self.consume(self.getDecoder(mod)(mod))
+        alais  = self.consume(self.getDecoder(name)(name))
+        module = "::" + module.replace(".","::")
+        if "::" in alais:
+            parts = alais.split("::")
+            alais = parts[-1]
+        yield "namespace %s =  %s;" % (alais, module)
 
     def decodeFrom(self, node):
         raw = node.children
@@ -493,13 +486,13 @@ class RayToCpp(object):
                 "module": self.consume(self.getDecoder(raw[1])(raw[1])),
                 "name": self.consume(self.getDecoder(raw[3])(raw[3])),
             }
-            cpp = "using %(name)s = %(module)s::%(name)s;"
+            cpp = "using %(name)s = ::%(module)s::%(name)s;"
         else :
             params = {
                 "module": self.consume(self.getDecoder(raw[1])(raw[1])),
                 "name": self.consume(self.getDecoder(raw[3])(raw[3])),
             }
-            cpp = "auto& %(name)s = %(module)s::%(name)s;"
+            cpp = "auto& %(name)s = ::%(module)s::%(name)s;"
         yield cpp % params
 
     def defaultNode(self, node, out=sys.stdout):
