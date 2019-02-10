@@ -4,7 +4,7 @@ echo transpileing
 time pipenv run python3 ray/ray.py --prefix input
 echo
 echo fromating
-time clang-format -i build/output.cpp
+time clang-format-7 -i build/output.cpp
 echo
 echo compileing
 extra_flags=${extra_flags:-""}
@@ -24,7 +24,7 @@ fi
 min_runtime=""
 stdlib="-stdlib=libc++ -lc++ -lc++abi"
 features="-std=c++17 -fpic -pie -fno-exceptions -fstrict-vtable-pointers -ffast-math -fvisibility=protected"
-compiler="clang++-6.0"
+compiler="clang++-7"
 linker="-fuse-ld=lld"
 cmd="${compiler} ${linker} ${optimizations} -o output/output ${stdlib} ${min_runtime} ${features} ${extra_features} ${sanatizers} ${error_checks} ${extra_flags} build/output.cpp"
 echo ${cmd}
