@@ -42,9 +42,11 @@ class ASTProcessor(object):
     def lookupVisableTypeDef(self, name, scope, recurse=False):
         current_scope = scope
         while current_scope:
-            typeDef = current_scope.type_defs.get(name) if isinstance(current_scope, rast.Module) else None
+            typeDef = (current_scope.type_defs.get(name) if
+                       isinstance(current_scope, rast.Module) else None)
             if typeDef:
-                if isinstance(typeDef, rast.ExternTypeStatement) or isinstance(typeDef, rast.ExternFuncStatement):
+                if (isinstance(typeDef, rast.ExternTypeStatement) or
+                    isinstance(typeDef, rast.ExternFuncStatement)):
                     typeDef = typeDef.type_def
                 return typeDef
             elif recurse:
@@ -112,7 +114,9 @@ class ASTProcessor(object):
         module = self.module_table.get(module_name)
         assert(module is not None)
         if( isinstance(raw[3], Token) and raw[3].value == "*"):
-            type_defs = self.scope.type_defs if isinstance(self.scope, rast.Module) else self.scope.parent.type_defs
+            type_defs = (self.scope.type_defs if
+                         isinstance(self.scope, rast.Module) else
+                         self.scope.parent.type_defs)
             for symbol_name , symbol in module.type_defs.items():
                 alias=symbol_name
                 if alias not in type_defs:
@@ -123,7 +127,9 @@ class ASTProcessor(object):
         else:
             symbol_name = raw[3].children[0].value
             alias = raw[5].children[0].value if len(raw) == 7 else symbol_name
-            type_defs = self.scope.type_defs if isinstance(self.scope, rast.Module) else self.scope.parent.type_defs
+            type_defs = (self.scope.type_defs if
+                         isinstance(self.scope, rast.Module) else
+                         self.scope.parent.type_defs)
             if alias not in type_defs:
                 delim = "." if  symbol_name[0].isupper() else ":"
                 qualifed_sym = "{}{}{}".format(module_name, delim, symbol_name)
@@ -138,7 +144,9 @@ class ASTProcessor(object):
         raw = node.children
         module_name = raw[1].children[0].value
         alias = raw[3].children[0].value if len(raw) == 5 else module_name
-        type_defs = self.scope.type_defs if isinstance(self.scope, rast.Module) else self.scope.parent.type_defs
+        type_defs = (self.scope.type_defs if 
+                     isinstance(self.scope, rast.Module) else
+                     self.scope.parent.type_defs)
         if alias not in type_defs:
             module = self.module_table.get(module_name)
             assert(module is not None)
@@ -175,13 +183,15 @@ class ASTProcessor(object):
         if sub_node_type == "aggregate_declaration":
             sub_node_len  = len(raw)
             typename = raw[0].children[0].value
-            size = None if sub_node_len != 6 else raw[2].children[0].children[0].value
+            size = (None if sub_node_len != 6 else
+                    raw[2].children[0].children[0].value)
             scalar_type_def = self.lookupVisableTypeDef(typename, parent)
             assert(scalar_type_def is not None)
             scalar_parent = scalar_type_def.parent
             name = "{}[{}]".format(typename, size or "")
-            qualifed_name = name if parent is None or scalar_parent.qualifed_name == "" else "%s%s%s" % (
-                scalar_parent.qualifed_name, ".", name)
+            qualifed_name = (name if parent is None or
+                scalar_parent.qualifed_name == "" else "%s%s%s" % (
+                scalar_parent.qualifed_name, ".", name))
             type_def = self.lookupVisableTypeDef(name, scalar_parent)
             if type_def is None:
                 type_def = rast.Aggregate(name, scalar_parent, size)
@@ -229,7 +239,8 @@ class ASTProcessor(object):
         statements = []
         raw = node.children
         parent = self.scope
-        type_defs = parent.type_defs if isinstance(parent, rast.Module) else parent.parent.type_defs
+        type_defs = (parent.type_defs if isinstance(parent, rast.Module)
+                     else parent.parent.type_defs)
         return_type_name = raw[0].children[0].value
         return_type = type_defs.get(return_type_name)
         if return_type is None:
@@ -299,7 +310,8 @@ class ASTProcessor(object):
         statements = []
         raw = node.children
         parent = self.scope
-        type_defs = parent.type_defs if isinstance(parent, rast.Module) else parent.parent.type_defs
+        type_defs = (parent.type_defs if isinstance(parent, rast.Module)
+                     else parent.parent.type_defs)
         return_type_name = raw[0].children[0].value
         return_type = type_defs.get(return_type_name)
         if return_type is None:
