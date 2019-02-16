@@ -109,7 +109,7 @@ data := iota(max);
 printv(data);
 }
 {
-from Test import *;
+from Test import fibRange;
 printf("fibRange(%d):\n",max);
 auto data := fibRange(max);
 printv(data);

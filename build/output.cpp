@@ -81,7 +81,7 @@ Int32 __main__(Int32 argc, CStringPtr args) {
         printv(data);
     }
     {
-        using namespace ::Test;
+        auto& fibRange = ::Test::fibRange;
         printf("fibRange(%d):\n", max);
         auto data = fibRange(max);
         printv(data);

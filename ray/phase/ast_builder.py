@@ -76,7 +76,10 @@ class ASTProcessor(object):
             name = node.data
         else:
             name = node.type
-        return self.nodeVisitor.get(name, partial(default, self))
+        visitor = self.nodeVisitor.get(name, partial(default, self))
+        if visitor is default:
+            print("node not supported", node)
+        return visitor
 
     def visitNode(self, node):
         self.getVisitor(node)(node)
@@ -106,20 +109,30 @@ class ASTProcessor(object):
     def visitFrom(self, node):
         raw = node.children
         module_name = raw[1].children[0].value
-        symbol_name = raw[3].children[0].value
-        alias = raw[5].children[0].value if len(raw) == 7 else symbol_name
-        type_defs = self.scope.type_defs if isinstance(self.scope, rast.Module) else self.scope.parent.type_defs
-        if alias not in type_defs:
-            module = self.module_table.get(module_name)
-            assert(module is not None)
-            delim = "." if  symbol_name[0].isupper() else ":"
-            qualifed_sym = "{}{}{}".format(module_name, delim, symbol_name)
-            symbol = self.type_table.get(qualifed_sym)
-            assert(symbol is not None)
-            statement = rast.FromStatement(module, symbol, alias=alias)
-            self.scope.statements.append(statement)
-            sym = type_defs.setdefault(alias, symbol)
-            assert(sym is symbol)
+        module = self.module_table.get(module_name)
+        assert(module is not None)
+        if( isinstance(raw[3], Token) and raw[3].value == "*"):
+            type_defs = self.scope.type_defs if isinstance(self.scope, rast.Module) else self.scope.parent.type_defs
+            for symbol_name , symbol in module.type_defs.items():
+                alias=symbol_name
+                if alias not in type_defs:
+                    statement = rast.FromStatement(module, symbol, alias=alias)
+                    self.scope.statements.append(statement)
+                    sym = type_defs.setdefault(alias, symbol)
+                    assert(sym is symbol)
+        else:
+            symbol_name = raw[3].children[0].value
+            alias = raw[5].children[0].value if len(raw) == 7 else symbol_name
+            type_defs = self.scope.type_defs if isinstance(self.scope, rast.Module) else self.scope.parent.type_defs
+            if alias not in type_defs:
+                delim = "." if  symbol_name[0].isupper() else ":"
+                qualifed_sym = "{}{}{}".format(module_name, delim, symbol_name)
+                symbol = self.type_table.get(qualifed_sym)
+                assert(symbol is not None)
+                statement = rast.FromStatement(module, symbol, alias=alias)
+                self.scope.statements.append(statement)
+                sym = type_defs.setdefault(alias, symbol)
+                assert(sym is symbol)
 
     def visitImport(self,node):
         raw = node.children
@@ -149,19 +162,43 @@ class ASTProcessor(object):
     def visitElse(self, node):
         pass
 
-    def visitWhile(self,node):
+    def visitWhile(self, node):
         pass
 
-    def visitVarDecl(self,node):
+    def visitVarDecl(self, node):
+        sub_node = node.children[0]
+        raw = sub_node.children
+        sub_node_type = sub_node.data
+        type_def = None
+        name = ""
+        parent = self.scope
+        if sub_node_type == "aggregate_declaration":
+            sub_node_len  = len(raw)
+            typename = raw[0].children[0].value
+            size = None if sub_node_len != 6 else raw[2].children[0].children[0].value
+            scalar_type_def = self.lookupVisableTypeDef(typename, parent)
+            assert(scalar_type_def is not None)
+            scalar_parent = scalar_type_def.parent
+            name = "{}[{}]".format(typename, size or "")
+            qualifed_name = name if parent is None or scalar_parent.qualifed_name == "" else "%s%s%s" % (
+                scalar_parent.qualifed_name, ".", name)
+            type_def = self.lookupVisableTypeDef(name, scalar_parent)
+            if type_def is None:
+                type_def = rast.Aggregate(name, scalar_parent, size)
+                type_def = parent.type_defs.setdefault(name, type_def)
+                self.type_table.setdefault(qualifed_name, type_def)
+        var = rast.LVal(node, name, type_def, constant=False)
+        statement = rast.DeclStatement(var)
+        parent.statements.append(statement)
+
+
+    def visitVarDef(self, node):
         pass
 
-    def visitVarDef(self,node):
-        pass
-
-    def visitParams(self,node):
+    def visitParams(self, node):
         pass
             
-    def visitModule(self,node):
+    def visitModule(self, node):
         raw = node.children
         name = raw[1].children[0].value
         block = raw[2]

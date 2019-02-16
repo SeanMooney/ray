@@ -90,6 +90,11 @@ class Struct(TypeDef):
         self.fields = {}
         self.functions = {}
 
+class Aggregate(Struct):
+    def __init__(self, name, parent, size, external=False):
+        super().__init__(name, parent, external=external)
+        self.size = size
+
 class Protocol(TypeDef):
     def __init__(self, name, parent):
         super().__init__(name, parent)
@@ -349,7 +354,7 @@ class RuntimeVar(RVal):
     pass
 
 class LVal(object):
-    def __init__(self, node, name, type_def, constant):
+    def __init__(self, node, name, type_def, constant=False):
         self.node = node
         self.name = name
         self.type = type_def
