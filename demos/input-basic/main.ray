@@ -1,9 +1,9 @@
 @@include test;
-import Runtime;
 
-#def struct Pair<T,U>{}
-
-def func Int32 main(Int32: argc, Char**: args){
+from Runtime import Int32;
+from Runtime import CStringPtr;
+func Int32 main(Int32: argc, CStringPtr: args){
+from Runtime import *;
 
     Int8 max := 64;
 
@@ -17,15 +17,12 @@ def func Int32 main(Int32: argc, Char**: args){
         printv(data);
     }
 
-    # from Test import Object;
-
     {
-        import Test;
+        from Test import fibRange;
         printf("fibRange(%d):\n",max);
         auto data := fibRange(max);
         printv(data);
     }
-
     
     return 0;
 }

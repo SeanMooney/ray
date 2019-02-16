@@ -1,7 +1,8 @@
 #!/bin/bash
 echo
-echo transpileing
-time pipenv run python3 ray/ray.py --prefix input
+prefix=${prefix:-"input"}
+echo transpileing ${prefix}
+time pipenv run python3 ray/ray.py --prefix ${prefix}
 echo
 echo fromating
 time clang-format-7 -i build/output.cpp
@@ -11,7 +12,7 @@ extra_flags=${extra_flags:-""}
 extra_features=""
 sanatizers=""
 error_checks=""
-if [[ "true" == "${Release:-false}" ]]; then
+if [[ "true" == "${release:-false}" ]]; then
     extra_features="-flto=thin -fwhole-program-vtables"
     optimizations="-O3 -g0 -march=native"
     error_checks="-pedantic"

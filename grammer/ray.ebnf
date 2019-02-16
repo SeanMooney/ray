@@ -1,10 +1,10 @@
 start: _statement+
-_statement:  comment | _define_statement | _declare_statement
-                     | assignment_statement | block_statement
-                     | expression_statement | return_statement
-                     | condtional_statement | _compiler_statement
-                     | _iteration_statement | module_statement
-                     | import_statement | from_statement
+_statement: comment | _define_statement    | _declare_statement
+                    | assignment_statement | block_statement
+                    | expression_statement | return_statement
+                    | condtional_statement | _compiler_statement
+                    | _iteration_statement | module_statement
+                    | import_statement     | from_statement
 STATEMENT_END: ";"
 comment: /\#[^\n]*/
 
@@ -15,11 +15,13 @@ _block: LBRACE _statement* RBRACE
 return_statement: _RETURN _rval STATEMENT_END
 _RETURN: "return"
 
-_type_name:  aggregate_type_name | scalar_type_name | pointer_type_name
+_type_name: _type_names  _OPTIONAL?
+_type_names: scalar_type_name | ref_type_name | aggregate_type_name | pointer_type_name
 scalar_type_name: _scalar_type_name
-_scalar_type_name: /[A-Z][a-zA-Z0-9_]*/ | AUTO
+_scalar_type_name: /[_A-Z][a-zA-Z0-9_]*/ | AUTO
 aggregate_type_name: _scalar_type_name _LBRAK digit* _RBRAK
-pointer_type_name: _scalar_type_name _POINTER
+pointer_type_name: _scalar_type_name _POINTER+
+ref_type_name: _scalar_type_name _REF
 constant_name: /[A-Z_]+/
 name: /[_a-z][a-zA-Z0-9_]*/
 digit: /[0-9]+/
@@ -27,6 +29,11 @@ digit: /[0-9]+/
 POINTER: _POINTER
 _POINTER: "*"
 
+REF: _REF
+_REF: "&"
+
+OPTIONAL: _OPTIONAL
+_OPTIONAL: "?"
 
 _rval: _expression | _value
 _value: literal_value | runtime_value
@@ -44,15 +51,14 @@ MULTI: "*"
 DIV: "/"
 MOD: "%"
 
-_logic_ops: BITOR | BITAND | AND | OR | NOT
-BITOR: "|"
-BITAND: "&"
-AND: "&&"
-OR: "||"
-NOT: "!"
+_logic_ops:  AND | OR | NOT
+AND: "and"
+OR:  "or"
+NOT: "not"
+XOR: "xor"
 
 _comparision_ops: NOTEQ | EQ | GTEQ | LTEQ
-                  | GT | LT | CMP
+                | GT | LT | CMP
 EQ: "=="
 NOTEQ: "!="
 GT: _RANGLE
@@ -77,22 +83,23 @@ LONG_STRING: /[ubf]?r?(""".*?(?<!\\)(\\\\)*?"""|'''.*?(?<!\\)(\\\\)*?''')/s
 
 assignment_statement: (name | name LBRAK _rval? RBRAK ) _assignment_operators _rval STATEMENT_END
 _assignment_operators: ASSIGNMENT | ADDASSIGN | SUBASSIGN | MULASSIGN | DIVASSIGN
-                     | LSHIFTASSIGN | RSHIFTASSIGN | POWERASSIGN | ORASSIGN | ANDASSIGN
+                     | MODASSIGN | POWERASSIGN | ORASSIGN | ANDASSIGN | XORASSIGN
 
-ASSIGNMENT: ":="
-ADDASSIGN: "+="
-SUBASSIGN: "-="
-MULASSIGN: "*="
-DIVASSIGN: "/="
-LSHIFTASSIGN: "<<="
-RSHIFTASSIGN: ">>="
+ASSIGNMENT:  ":="
+ADDASSIGN:   "+="
+SUBASSIGN:   "-="
+MULASSIGN:   "*="
+DIVASSIGN:   "/="
+MODASSIGN:   "%="
 POWERASSIGN: "^="
-ORASSIGN: "|="
-ANDASSIGN: "&="
+ORASSIGN:    "or="
+ANDASSIGN:   "and="
+XORASSIGN:   "xor="
+NOTASSIGN:   "not="
 
-_PIPE: "¦"
-_COMMA: ","
-_COLON: ":"
+_PIPE:   "¦"
+_COMMA:  ","
+_COLON:  ":"
 _LPREN:  "("
 _RPREN:  ")"
 _LBRAK:  "["
@@ -116,8 +123,6 @@ LANGLE: _LANGLE
 RANGLE: _RANGLE
 ESCAPE: _ESCAPE
 
-
-
 paramaters: _paramater (COMMA _paramater)*
 _paramater: _type_name COLON name (ASSIGNMENT _value)?
 
@@ -133,7 +138,6 @@ bin_expression: _rval _expression_operator _rval
 _uniary_expression: prefix_expression | postfix_expression
 prefix_expression: _expression_operator _rval
 postfix_expression: _rval _expression_operator
-
 
 condtional_statement: if_statement
                     | if_statement elif_statement
@@ -161,29 +165,27 @@ _OPEN_ESCAPE_BLOCK: "<[{"
 _CLOSE_ESCAPE_BLOCK: "}]>"
 
 _define_statement: class_define | function_define | variable_define
-class_define: _DEFINE _STRUCT _type_name (COLON _type_name)? block
-function_define: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN block
+class_define: _STRUCT _type_name (COLON _type_name)? block
+function_define: _FUNCTION _type_name name LPREN paramaters? RPREN block
 variable_define: scalar_define | aggregate_define
-scalar_define: (scalar_type_name|pointer_type_name) name ASSIGNMENT _rval STATEMENT_END
+scalar_define: (scalar_type_name|pointer_type_name|ref_type_name) name ASSIGNMENT _rval STATEMENT_END
 aggregate_define: scalar_type_name LBRAK _rval RBRAK name ASSIGNMENT _rval STATEMENT_END
 
-
 _declare_statement: class_declaration | function_declaration | variable_declaration
-class_declaration: _DEFINE _STRUCT _type_name STATEMENT_END
-function_declaration: _DEFINE _FUNCTION _type_name name LPREN paramaters? RPREN STATEMENT_END
+class_declaration: _STRUCT _type_name STATEMENT_END
+function_declaration: _FUNCTION _type_name name LPREN paramaters? RPREN STATEMENT_END
 variable_declaration: scalar_declaration | aggregate_declaration
 scalar_declaration: (scalar_type_name|pointer_type_name) name STATEMENT_END
 aggregate_declaration: scalar_type_name LBRAK _rval RBRAK name STATEMENT_END
 
 module_statement: MODULE scalar_type_name block
 import_statement: IMPORT scalar_type_name STATEMENT_END
-from_statement: FROM scalar_type_name  IMPORT (name|scalar_type_name) STATEMENT_END
+from_statement: FROM scalar_type_name  IMPORT (name|scalar_type_name| POINTER) STATEMENT_END
 
-keyword: _STRUCT | _DEFINE | _FUNCTION | AUTO | CONST
+keyword: _STRUCT | _FUNCTION | AUTO | CONST
        | MUTABLE | MODULE | IMPORT | FROM
 
 _STRUCT: "struct"
-_DEFINE: "def"
 _FUNCTION: "func"
 
 AUTO: "auto"

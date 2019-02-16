@@ -32,8 +32,8 @@ def main(args):
     # print(symbol_builder.global_scope)
     # print("\n\n\nprinting symbols  end")
     # print(symbol_builder.func_table['main'])
-    astBuilder = ASTProcessor()
-    astBuilder.processTree(tree)
+    # astBuilder = ASTProcessor()
+    # astBuilder.processTree(tree)
 
     transPiler = RayToCpp(args.prefix)
     with open(out_file, "w") as output_file:

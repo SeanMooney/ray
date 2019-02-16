@@ -52,6 +52,7 @@ class RayToCpp(object):
             "scalar_type_name": self.decodeScalarTypeName,
             "aggregate_type_name": self.decodeAggregateTypeName,
             "pointer_type_name": self.decodePointerTypeName,
+            "ref_type_name": self.decodeRefTypeName,
             "comment": self.decodeComment,
             "number": self.decodeNumber,
             "token": self.decodeToken,
@@ -358,8 +359,9 @@ class RayToCpp(object):
 
     def decodeScalarDef(self, node):
         child_nodes = node.children
+        typename=child_nodes[0]
         params = {
-            "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
+            "type": self.consume(self.getDecoder(typename)(typename)),
             "name": self.consume(self.decodeName(child_nodes[1])),
             "val": self.consume(self.decodeRVal(child_nodes[3])),
         }
@@ -457,6 +459,14 @@ class RayToCpp(object):
             data += self.consume(self.getDecoder(sub_node)(sub_node))
         yield "".join(data)
 
+    def decodeRefTypeName(self, node):
+        child_nodes = node.children
+        data = []
+        for sub_node in child_nodes:
+            data += self.consume(self.getDecoder(sub_node)(sub_node))
+        data+="&"
+        yield "".join(data)
+
     def decodeModule(self, node):
         child_nodes = node.children
         data = ["namespace "]
@@ -481,18 +491,23 @@ class RayToCpp(object):
         raw = node.children
         params = {}
         cpp = ""
-        if(raw[3].data != "name"):
+        if( isinstance(raw[3], Token) and self.consume(self.decodeToken(raw[3])) == "*"):
             params = {
                 "module": self.consume(self.getDecoder(raw[1])(raw[1])),
-                "name": self.consume(self.getDecoder(raw[3])(raw[3])),
             }
-            cpp = "using %(name)s = ::%(module)s::%(name)s;"
-        else :
+            cpp = "using namespace ::%(module)s;"
+        elif(raw[3].data == "name"):
             params = {
                 "module": self.consume(self.getDecoder(raw[1])(raw[1])),
                 "name": self.consume(self.getDecoder(raw[3])(raw[3])),
             }
             cpp = "auto& %(name)s = ::%(module)s::%(name)s;"
+        else :
+            params = {
+                "module": self.consume(self.getDecoder(raw[1])(raw[1])),
+                "name": self.consume(self.getDecoder(raw[3])(raw[3])),
+            }
+            cpp = "using %(name)s = ::%(module)s::%(name)s;"
         yield cpp % params
 
     def defaultNode(self, node, out=sys.stdout):

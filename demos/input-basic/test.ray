@@ -1,7 +1,7 @@
 
 module Test {
-import Runtime;
-    def func Int32[] iota(Int8: max){
+from Runtime import *;
+    func Int32[] iota(Int8: max){
         Int32 current := 0;
         Int32[max] result;
         while(current < max){
@@ -12,7 +12,7 @@ import Runtime;
     }
 
     Int64[64] fibCache;
-    def func Int64 fib(Int8: i){
+    func Int64 fib(Int8: i){
         Int64& cached := fibCache[i];
         if(cached !=0){
             return cached;
@@ -27,7 +27,7 @@ import Runtime;
         return cached;
     }
 
-    def func Int64[] fibRange(Int8: max){
+    func Int64[] fibRange(Int8: max){
         Int64[max] result;
         Int8 current := 0;
         while(current < max){
@@ -37,6 +37,6 @@ import Runtime;
         return result;
     }
 
-    def struct Object {}
+    struct Object {}
 
 }
