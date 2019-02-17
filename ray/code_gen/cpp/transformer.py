@@ -6,6 +6,7 @@ from functools import partial
 
 from lark.lexer import Token
 
+
 class RayToCpp(object):
 
     def __init__(self, prefix, **kwargs):
@@ -336,8 +337,9 @@ class RayToCpp(object):
 
     def decodeScalareDeclare(self, node):
         child_nodes = node.children
+        typename = child_nodes[0]
         params = {
-            "type": self.consume(self.decodeScalarTypeName(child_nodes[0])),
+            "type": self.consume(self.getDecoder(typename)(typename)),
             "name": self.consume(self.decodeName(child_nodes[1])),
         }
         cpp = "%(type)s %(name)s;"
@@ -464,7 +466,6 @@ class RayToCpp(object):
         data = []
         for sub_node in child_nodes:
             data += self.consume(self.getDecoder(sub_node)(sub_node))
-        data+="&"
         yield "".join(data)
 
     def decodeModule(self, node):

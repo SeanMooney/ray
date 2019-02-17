@@ -100,6 +100,10 @@ from Runtime import CStringPtr;
 func Int32 main(Int32: argc, CStringPtr: args){
 from Runtime import *;
 Int8 max := 64;
+Int8 byte;
+Int8& byte_ref := byte;
+Int8* byte_pointer;
+Int8** byte_pointer_pointer;
 println("hello world");
 {
 from Test import iota;

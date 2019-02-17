@@ -20,8 +20,8 @@ _type_names: scalar_type_name | ref_type_name | aggregate_type_name | pointer_ty
 scalar_type_name: _scalar_type_name
 _scalar_type_name: /[_A-Z][a-zA-Z0-9_]*/ | AUTO
 aggregate_type_name: _scalar_type_name _LBRAK digit* _RBRAK
-pointer_type_name: _scalar_type_name _POINTER+
-ref_type_name: _scalar_type_name _REF
+pointer_type_name: _scalar_type_name POINTER+
+ref_type_name: _scalar_type_name REF
 constant_name: /[A-Z_]+/
 name: /[_a-z][a-zA-Z0-9_]*/
 digit: /[0-9]+/

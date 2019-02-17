@@ -137,7 +137,6 @@ class FuncStatement(TypeStatement):
         self.type_def.returns = self.return_type
         self.type_def.params = self.params
 
-
 class Comment(Statement):
     def __init__(self, text):
         self.text = text

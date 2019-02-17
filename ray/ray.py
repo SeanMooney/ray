@@ -5,7 +5,6 @@ from lark import Lark
 
 from code_gen.cpp.transformer import RayToCpp
 from phase.preprocessor import IncludeProcessor
-# from phase.inference import SymbolProcessor
 from phase.ast_builder import ASTProcessor
 
 def main(args):
@@ -26,6 +25,7 @@ def main(args):
     with open(unity_file) as inpute_file:
         tree = parser.parse(inpute_file.read())
     
+    # from phase.inference import SymbolProcessor
     # symbol_builder = SymbolProcessor()
     # symbol_builder.processTree(tree)
     astBuilder = ASTProcessor()
